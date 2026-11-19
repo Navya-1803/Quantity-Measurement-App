@@ -47,4 +47,17 @@ public enum LengthUnit implements IMeasurable {
     public String getUnitName() {
         return name();
     }
+
+    @Override
+    public IMeasurable getUnitInstance(String unitName) {
+        if (unitName == null || unitName.isBlank()) {
+            throw new IllegalArgumentException("Unit name cannot be empty");
+        }
+        for (LengthUnit unit : values()) {
+            if (unit.name().equalsIgnoreCase(unitName.trim())) {
+                return unit;
+            }
+        }
+        throw new IllegalArgumentException("Invalid unit '" + unitName + "' for LengthUnit");
+    }
 }

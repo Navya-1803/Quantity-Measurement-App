@@ -65,4 +65,19 @@ class TemperatureUnitTest {
                 () -> TemperatureUnit.FAHRENHEIT.validateOperationSupport("SUBTRACT"));
         assertTrue(exception.getMessage().contains("SUBTRACT"));
     }
+
+    @Test
+    void testGetUnitInstance_ValidName() {
+        assertEquals(TemperatureUnit.KELVIN, TemperatureUnit.KELVIN.getUnitInstance("kelvin"));
+    }
+
+    @Test
+    void testGetUnitInstance_InvalidName() {
+        assertThrows(IllegalArgumentException.class, () -> TemperatureUnit.KELVIN.getUnitInstance("UNKNOWN"));
+    }
+
+    @Test
+    void testGetMeasurementType() {
+        assertEquals("TemperatureUnit", TemperatureUnit.KELVIN.getMeasurementType());
+    }
 }

@@ -54,4 +54,19 @@ class WeightUnitTest {
     void testGetUnitName() {
         assertEquals("KILOGRAM", WeightUnit.KILOGRAM.getUnitName());
     }
+
+    @Test
+    void testGetUnitInstance_ValidName() {
+        assertEquals(WeightUnit.GRAM, WeightUnit.GRAM.getUnitInstance("gram"));
+    }
+
+    @Test
+    void testGetUnitInstance_InvalidName() {
+        assertThrows(IllegalArgumentException.class, () -> WeightUnit.GRAM.getUnitInstance("UNKNOWN"));
+    }
+
+    @Test
+    void testGetMeasurementType() {
+        assertEquals("WeightUnit", WeightUnit.GRAM.getMeasurementType());
+    }
 }

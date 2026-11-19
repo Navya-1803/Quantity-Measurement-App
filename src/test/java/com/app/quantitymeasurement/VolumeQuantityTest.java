@@ -227,9 +227,11 @@ class VolumeQuantityTest {
 
     @Test
     void testScalability_VolumeIntegration() {
-        // the app demonstration methods work for volume without any change
-        assertTrue(QuantityMeasurementApp.demonstrateEquality(new Quantity<>(1.0, VolumeUnit.LITRE), new Quantity<>(1000.0, VolumeUnit.MILLILITRE)));
-        assertEquals(new Quantity<>(2.0, VolumeUnit.LITRE), QuantityMeasurementApp.demonstrateAddition(
-                new Quantity<>(1.0, VolumeUnit.LITRE), new Quantity<>(1000.0, VolumeUnit.MILLILITRE), VolumeUnit.LITRE));
+        // the layered application handles volume without any change
+        QuantityMeasurementController controller = QuantityMeasurementApp.getInstance().getController();
+        assertTrue(controller.performComparison(new QuantityDTO(1.0, QuantityDTO.VolumeUnit.LITRE),
+                new QuantityDTO(1000.0, QuantityDTO.VolumeUnit.MILLILITRE)));
+        assertEquals(2.0, controller.performAddition(new QuantityDTO(1.0, QuantityDTO.VolumeUnit.LITRE),
+                new QuantityDTO(1000.0, QuantityDTO.VolumeUnit.MILLILITRE)).getValue(), DELTA);
     }
 }

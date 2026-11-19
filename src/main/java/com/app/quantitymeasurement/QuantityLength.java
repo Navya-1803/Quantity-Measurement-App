@@ -103,12 +103,27 @@ public class QuantityLength {
      * @throws IllegalArgumentException if other is null
      */
     public QuantityLength add(QuantityLength other) {
+        return add(other, unit);
+    }
+
+    /**
+     * Adds another length to this one and expresses the result in the given target unit.
+     *
+     * @param other      length to add
+     * @param targetUnit unit of the result
+     * @return new QuantityLength holding the sum in the target unit
+     * @throws IllegalArgumentException if other or targetUnit is null
+     */
+    public QuantityLength add(QuantityLength other, LengthUnit targetUnit) {
         if (other == null) {
             throw new IllegalArgumentException("Length to add cannot be null");
         }
-        // add in the base unit and convert the sum back to this unit
+        if (targetUnit == null) {
+            throw new IllegalArgumentException("Target unit cannot be null");
+        }
+        // add in the base unit and convert the sum to the target unit
         double sumInFeet = this.convertToFeet() + other.convertToFeet();
-        return new QuantityLength(sumInFeet / unit.getConversionFactor(), unit);
+        return new QuantityLength(sumInFeet / targetUnit.getConversionFactor(), targetUnit);
     }
 
     @Override

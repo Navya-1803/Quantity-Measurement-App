@@ -57,4 +57,11 @@ class QuantityMeasurementAppTest {
         assertThrows(IllegalArgumentException.class, () -> QuantityMeasurementApp.demonstrateLengthAddition(
                 null, new QuantityLength(1.0, LengthUnit.FEET)));
     }
+
+    @Test
+    void testDemonstrateLengthAddition_WithTargetUnit() {
+        QuantityLength result = QuantityMeasurementApp.demonstrateLengthAddition(
+                new QuantityLength(1.0, LengthUnit.FEET), new QuantityLength(12.0, LengthUnit.INCHES), LengthUnit.INCHES);
+        assertEquals(new QuantityLength(24.0, LengthUnit.INCHES), result);
+    }
 }

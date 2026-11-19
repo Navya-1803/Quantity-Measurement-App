@@ -75,6 +75,64 @@ public class Quantity<U extends IMeasurable> {
         return new Quantity<>(targetUnit.convertFromBaseUnit(sum), targetUnit);
     }
 
+    /**
+     * Subtracts another quantity from this one, the result is in the unit of
+     * this (first) operand and rounded to two decimal places.
+     * Subtraction is not commutative: a - b is not the same as b - a.
+     *
+     * @throws IllegalArgumentException if other is null or of a different category
+     */
+    public Quantity<U> subtract(Quantity<U> other) {
+        return subtract(other, unit);
+    }
+
+    /**
+     * Subtracts another quantity from this one and expresses the result in the
+     * target unit, rounded to two decimal places.
+     *
+     * @throws IllegalArgumentException if other / target unit is null or categories differ
+     */
+    public Quantity<U> subtract(Quantity<U> other, U targetUnit) {
+        if (other == null) {
+            throw new IllegalArgumentException("Quantity to subtract cannot be null");
+        }
+        if (targetUnit == null) {
+            throw new IllegalArgumentException("Target unit cannot be null");
+        }
+        if (this.unit.getClass() != other.unit.getClass()) {
+            throw new IllegalArgumentException("Cannot subtract quantities of different categories");
+        }
+        double difference = this.toBaseUnit() - other.toBaseUnit();
+        return new Quantity<>(roundToTwoDecimals(targetUnit.convertFromBaseUnit(difference)), targetUnit);
+    }
+
+    /**
+     * Divides this quantity by another one of the same category.
+     * The result is a plain number (ratio), e.g. 24 INCHES / 2 FEET = 1.0
+     *
+     * @return ratio of this quantity to the other quantity
+     * @throws IllegalArgumentException if other is null or of a different category
+     * @throws ArithmeticException      if other is zero
+     */
+    public double divide(Quantity<U> other) {
+        if (other == null) {
+            throw new IllegalArgumentException("Quantity to divide by cannot be null");
+        }
+        if (this.unit.getClass() != other.unit.getClass()) {
+            throw new IllegalArgumentException("Cannot divide quantities of different categories");
+        }
+        double divisor = other.toBaseUnit();
+        if (Math.abs(divisor) < EPSILON) {
+            throw new ArithmeticException("Cannot divide by zero quantity");
+        }
+        return this.toBaseUnit() / divisor;
+    }
+
+    // rounds a value to two decimal places
+    private static double roundToTwoDecimals(double value) {
+        return Math.round(value * 100.0) / 100.0;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

@@ -4,8 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * QuantityMeasurementApp demonstrates equality, conversion and addition
- * for any measurement category with a single set of generic methods.
+ * QuantityMeasurementApp demonstrates equality, conversion, addition,
+ * subtraction and division for any measurement category with a single set
+ * of generic methods.
  *
  * @author Navya Raj
  */
@@ -60,6 +61,36 @@ public class QuantityMeasurementApp {
         return result;
     }
 
+    /**
+     * Subtracts the second quantity from the first, result is in the unit of the first.
+     */
+    public static <U extends IMeasurable> Quantity<U> demonstrateSubtraction(Quantity<U> first, Quantity<U> second) {
+        requireQuantity(first);
+        Quantity<U> result = first.subtract(second);
+        logger.info("Input: {}.subtract({}) -> Output: {}", first, second, result);
+        return result;
+    }
+
+    /**
+     * Subtracts the second quantity from the first and returns the result in the target unit.
+     */
+    public static <U extends IMeasurable> Quantity<U> demonstrateSubtraction(Quantity<U> first, Quantity<U> second, U targetUnit) {
+        requireQuantity(first);
+        Quantity<U> result = first.subtract(second, targetUnit);
+        logger.info("Input: {}.subtract({}, {}) -> Output: {}", first, second, targetUnit, result);
+        return result;
+    }
+
+    /**
+     * Divides the first quantity by the second and returns the ratio.
+     */
+    public static <U extends IMeasurable> double demonstrateDivision(Quantity<U> first, Quantity<U> second) {
+        requireQuantity(first);
+        double result = first.divide(second);
+        logger.info("Input: {}.divide({}) -> Output: {}", first, second, result);
+        return result;
+    }
+
     public static void main(String[] args) {
         // length operations (UC1 - UC8)
         demonstrateEquality(new Quantity<>(1.0, LengthUnit.FEET), new Quantity<>(12.0, LengthUnit.INCHES));
@@ -89,6 +120,23 @@ public class QuantityMeasurementApp {
         demonstrateAddition(oneLitre, thousandMillilitre);
         demonstrateAddition(oneLitre, oneGallon, VolumeUnit.MILLILITRE);
         demonstrateAddition(thousandMillilitre, oneGallon, VolumeUnit.GALLON);
+
+        // subtraction (UC12)
+        demonstrateSubtraction(new Quantity<>(10.0, LengthUnit.FEET), new Quantity<>(6.0, LengthUnit.INCHES));
+        demonstrateSubtraction(new Quantity<>(10.0, WeightUnit.KILOGRAM), new Quantity<>(5000.0, WeightUnit.GRAM));
+        demonstrateSubtraction(new Quantity<>(5.0, VolumeUnit.LITRE), new Quantity<>(500.0, VolumeUnit.MILLILITRE));
+        demonstrateSubtraction(new Quantity<>(10.0, LengthUnit.FEET), new Quantity<>(6.0, LengthUnit.INCHES), LengthUnit.INCHES);
+        demonstrateSubtraction(new Quantity<>(10.0, WeightUnit.KILOGRAM), new Quantity<>(5000.0, WeightUnit.GRAM), WeightUnit.GRAM);
+        demonstrateSubtraction(new Quantity<>(5.0, VolumeUnit.LITRE), new Quantity<>(2.0, VolumeUnit.LITRE), VolumeUnit.MILLILITRE);
+        demonstrateSubtraction(new Quantity<>(5.0, LengthUnit.FEET), new Quantity<>(10.0, LengthUnit.FEET));
+        demonstrateSubtraction(new Quantity<>(10.0, LengthUnit.FEET), new Quantity<>(120.0, LengthUnit.INCHES));
+
+        // division (UC12)
+        demonstrateDivision(new Quantity<>(10.0, LengthUnit.FEET), new Quantity<>(2.0, LengthUnit.FEET));
+        demonstrateDivision(new Quantity<>(24.0, LengthUnit.INCHES), new Quantity<>(2.0, LengthUnit.FEET));
+        demonstrateDivision(new Quantity<>(10.0, WeightUnit.KILOGRAM), new Quantity<>(5.0, WeightUnit.KILOGRAM));
+        demonstrateDivision(new Quantity<>(5.0, VolumeUnit.LITRE), new Quantity<>(10.0, VolumeUnit.LITRE));
+        demonstrateDivision(new Quantity<>(2000.0, WeightUnit.GRAM), new Quantity<>(1.0, WeightUnit.KILOGRAM));
 
         // cross category comparison is always false
         Quantity<LengthUnit> oneFoot = new Quantity<>(1.0, LengthUnit.FEET);

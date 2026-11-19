@@ -57,4 +57,19 @@ class VolumeUnitTest {
     void testGetUnitName() {
         assertEquals("GALLON", VolumeUnit.GALLON.getUnitName());
     }
+
+    @Test
+    void testGetUnitInstance_ValidName() {
+        assertEquals(VolumeUnit.GALLON, VolumeUnit.GALLON.getUnitInstance("gallon"));
+    }
+
+    @Test
+    void testGetUnitInstance_InvalidName() {
+        assertThrows(IllegalArgumentException.class, () -> VolumeUnit.GALLON.getUnitInstance("UNKNOWN"));
+    }
+
+    @Test
+    void testGetMeasurementType() {
+        assertEquals("VolumeUnit", VolumeUnit.GALLON.getMeasurementType());
+    }
 }

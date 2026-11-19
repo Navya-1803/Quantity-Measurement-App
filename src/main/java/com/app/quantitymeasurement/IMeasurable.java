@@ -33,6 +33,22 @@ public interface IMeasurable {
     String getUnitName();
 
     /**
+     * @return measurement category of the unit, e.g. "LengthUnit"
+     */
+    default String getMeasurementType() {
+        return this.getClass().getSimpleName();
+    }
+
+    /**
+     * Finds the unit with the given name in the same category as this unit.
+     *
+     * @param unitName name of the unit, e.g. "INCHES"
+     * @return matching unit
+     * @throws IllegalArgumentException if no unit with that name exists in the category
+     */
+    IMeasurable getUnitInstance(String unitName);
+
+    /**
      * @return true if add, subtract and divide are allowed for this unit
      */
     default boolean supportsArithmetic() {

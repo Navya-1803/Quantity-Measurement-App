@@ -7,47 +7,26 @@ import static org.junit.jupiter.api.Assertions.*;
 class QuantityMeasurementAppTest {
 
     @Test
-    void testQuantityMeasurementApp_SimplifiedDemonstration_Equality() {
-        assertTrue(QuantityMeasurementApp.demonstrateEquality(new Quantity<>(1.0, LengthUnit.FEET), new Quantity<>(12.0, LengthUnit.INCHES)));
-        assertTrue(QuantityMeasurementApp.demonstrateEquality(new Quantity<>(1.0, WeightUnit.KILOGRAM), new Quantity<>(1000.0, WeightUnit.GRAM)));
+    void testGetInstance_IsSingleton() {
+        assertSame(QuantityMeasurementApp.getInstance(), QuantityMeasurementApp.getInstance());
     }
 
     @Test
-    void testQuantityMeasurementApp_SimplifiedDemonstration_Conversion() {
-        assertEquals(new Quantity<>(12.0, LengthUnit.INCHES), QuantityMeasurementApp.demonstrateConversion(new Quantity<>(1.0, LengthUnit.FEET), LengthUnit.INCHES));
+    void testApp_CreatesAllLayers() {
+        QuantityMeasurementApp app = QuantityMeasurementApp.getInstance();
+        assertNotNull(app.getController());
+        assertInstanceOf(QuantityMeasurementCacheRepository.class, app.getRepository());
     }
 
     @Test
-    void testQuantityMeasurementApp_SimplifiedDemonstration_Addition() {
-        assertEquals(new Quantity<>(2.0, LengthUnit.FEET), QuantityMeasurementApp.demonstrateAddition(
-                new Quantity<>(1.0, LengthUnit.FEET), new Quantity<>(12.0, LengthUnit.INCHES)));
-        assertEquals(new Quantity<>(2000.0, WeightUnit.GRAM), QuantityMeasurementApp.demonstrateAddition(
-                new Quantity<>(1.0, WeightUnit.KILOGRAM), new Quantity<>(1000.0, WeightUnit.GRAM), WeightUnit.GRAM));
-    }
-
-    @Test
-    void testDemonstrationMethods_NullQuantity() {
-        assertThrows(IllegalArgumentException.class, () -> QuantityMeasurementApp.demonstrateEquality(null, new Quantity<>(1.0, LengthUnit.FEET)));
-        assertThrows(IllegalArgumentException.class, () -> QuantityMeasurementApp.demonstrateConversion(null, LengthUnit.FEET));
-        assertThrows(IllegalArgumentException.class, () -> QuantityMeasurementApp.demonstrateAddition(null, new Quantity<>(1.0, LengthUnit.FEET)));
+    void testIntegration_EndToEnd_LengthAddition() {
+        QuantityDTO result = QuantityMeasurementApp.getInstance().getController().performAddition(
+                new QuantityDTO(1.0, QuantityDTO.LengthUnit.FEET), new QuantityDTO(12.0, QuantityDTO.LengthUnit.INCHES));
+        assertEquals(2.0, result.getValue(), 1e-6);
     }
 
     @Test
     void testMain_RunsWithoutException() {
         assertDoesNotThrow(() -> QuantityMeasurementApp.main(new String[]{}));
-    }
-
-    @Test
-    void testDemonstrateSubtraction() {
-        assertEquals(new Quantity<>(9.5, LengthUnit.FEET), QuantityMeasurementApp.demonstrateSubtraction(
-                new Quantity<>(10.0, LengthUnit.FEET), new Quantity<>(6.0, LengthUnit.INCHES)));
-        assertEquals(new Quantity<>(3000.0, VolumeUnit.MILLILITRE), QuantityMeasurementApp.demonstrateSubtraction(
-                new Quantity<>(5.0, VolumeUnit.LITRE), new Quantity<>(2.0, VolumeUnit.LITRE), VolumeUnit.MILLILITRE));
-    }
-
-    @Test
-    void testDemonstrateDivision() {
-        assertEquals(5.0, QuantityMeasurementApp.demonstrateDivision(new Quantity<>(10.0, LengthUnit.FEET), new Quantity<>(2.0, LengthUnit.FEET)), 1e-6);
-        assertThrows(IllegalArgumentException.class, () -> QuantityMeasurementApp.demonstrateDivision(null, new Quantity<>(2.0, LengthUnit.FEET)));
     }
 }

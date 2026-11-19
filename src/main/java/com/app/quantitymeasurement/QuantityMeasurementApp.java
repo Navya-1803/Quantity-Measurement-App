@@ -1,12 +1,16 @@
 package com.app.quantitymeasurement;
 
+import com.app.quantitymeasurement.QuantityDTO.LengthUnit;
+import com.app.quantitymeasurement.QuantityDTO.TemperatureUnit;
+import com.app.quantitymeasurement.QuantityDTO.VolumeUnit;
+import com.app.quantitymeasurement.QuantityDTO.WeightUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * QuantityMeasurementApp demonstrates equality, conversion, addition,
- * subtraction and division for any measurement category with a single set
- * of generic methods.
+ * QuantityMeasurementApp is the entry point of the application. It creates
+ * the repository, service and controller (Factory), and runs every
+ * operation through the controller (Facade). The app itself is a Singleton.
  *
  * @author Navya Raj
  */
@@ -14,153 +18,75 @@ public class QuantityMeasurementApp {
 
     private static final Logger logger = LoggerFactory.getLogger(QuantityMeasurementApp.class);
 
-    // common null check used by all demonstration methods
-    private static void requireQuantity(Quantity<?> quantity) {
-        if (quantity == null) {
-            throw new IllegalArgumentException("Quantity cannot be null");
+    private static QuantityMeasurementApp instance;
+
+    private final IQuantityMeasurementRepository repository;
+    private final QuantityMeasurementController controller;
+
+    private QuantityMeasurementApp() {
+        this.repository = createRepository();
+        this.controller = createController(createService(repository));
+        logger.info("QuantityMeasurementApp initialized");
+    }
+
+    public static synchronized QuantityMeasurementApp getInstance() {
+        if (instance == null) {
+            instance = new QuantityMeasurementApp();
         }
+        return instance;
     }
 
-    /**
-     * Compares two quantities of the same category and logs the result.
-     */
-    public static <U extends IMeasurable> boolean demonstrateEquality(Quantity<U> first, Quantity<U> second) {
-        requireQuantity(first);
-        boolean result = first.equals(second);
-        logger.info("Input: {}.equals({}) -> Output: {}", first, second, result);
-        return result;
+    // factory methods for each layer
+    private static IQuantityMeasurementRepository createRepository() {
+        return QuantityMeasurementCacheRepository.getInstance();
     }
 
-    /**
-     * Converts a quantity to the target unit and logs the result.
-     */
-    public static <U extends IMeasurable> Quantity<U> demonstrateConversion(Quantity<U> quantity, U targetUnit) {
-        requireQuantity(quantity);
-        Quantity<U> result = quantity.convertTo(targetUnit);
-        logger.info("Input: {}.convertTo({}) -> Output: {}", quantity, targetUnit, result);
-        return result;
+    private static IQuantityMeasurementService createService(IQuantityMeasurementRepository repository) {
+        return new QuantityMeasurementServiceImpl(repository);
     }
 
-    /**
-     * Adds two quantities, the result is in the unit of the first one.
-     */
-    public static <U extends IMeasurable> Quantity<U> demonstrateAddition(Quantity<U> first, Quantity<U> second) {
-        requireQuantity(first);
-        Quantity<U> result = first.add(second);
-        logger.info("Input: {}.add({}) -> Output: {}", first, second, result);
-        return result;
+    private static QuantityMeasurementController createController(IQuantityMeasurementService service) {
+        return new QuantityMeasurementController(service);
     }
 
-    /**
-     * Adds two quantities and returns the result in the target unit.
-     */
-    public static <U extends IMeasurable> Quantity<U> demonstrateAddition(Quantity<U> first, Quantity<U> second, U targetUnit) {
-        requireQuantity(first);
-        Quantity<U> result = first.add(second, targetUnit);
-        logger.info("Input: {}.add({}, {}) -> Output: {}", first, second, targetUnit, result);
-        return result;
+    public QuantityMeasurementController getController() {
+        return controller;
     }
 
-    /**
-     * Subtracts the second quantity from the first, result is in the unit of the first.
-     */
-    public static <U extends IMeasurable> Quantity<U> demonstrateSubtraction(Quantity<U> first, Quantity<U> second) {
-        requireQuantity(first);
-        Quantity<U> result = first.subtract(second);
-        logger.info("Input: {}.subtract({}) -> Output: {}", first, second, result);
-        return result;
-    }
-
-    /**
-     * Subtracts the second quantity from the first and returns the result in the target unit.
-     */
-    public static <U extends IMeasurable> Quantity<U> demonstrateSubtraction(Quantity<U> first, Quantity<U> second, U targetUnit) {
-        requireQuantity(first);
-        Quantity<U> result = first.subtract(second, targetUnit);
-        logger.info("Input: {}.subtract({}, {}) -> Output: {}", first, second, targetUnit, result);
-        return result;
-    }
-
-    /**
-     * Divides the first quantity by the second and returns the ratio.
-     */
-    public static <U extends IMeasurable> double demonstrateDivision(Quantity<U> first, Quantity<U> second) {
-        requireQuantity(first);
-        double result = first.divide(second);
-        logger.info("Input: {}.divide({}) -> Output: {}", first, second, result);
-        return result;
+    public IQuantityMeasurementRepository getRepository() {
+        return repository;
     }
 
     public static void main(String[] args) {
-        // length operations (UC1 - UC8)
-        demonstrateEquality(new Quantity<>(1.0, LengthUnit.FEET), new Quantity<>(12.0, LengthUnit.INCHES));
-        demonstrateEquality(new Quantity<>(1.0, LengthUnit.YARDS), new Quantity<>(36.0, LengthUnit.INCHES));
-        demonstrateConversion(new Quantity<>(1.0, LengthUnit.FEET), LengthUnit.INCHES);
-        demonstrateAddition(new Quantity<>(1.0, LengthUnit.FEET), new Quantity<>(12.0, LengthUnit.INCHES), LengthUnit.FEET);
+        QuantityMeasurementApp app = QuantityMeasurementApp.getInstance();
+        QuantityMeasurementController controller = app.getController();
 
-        // weight operations (UC9)
-        demonstrateEquality(new Quantity<>(1.0, WeightUnit.KILOGRAM), new Quantity<>(1000.0, WeightUnit.GRAM));
-        demonstrateConversion(new Quantity<>(1.0, WeightUnit.KILOGRAM), WeightUnit.GRAM);
-        demonstrateAddition(new Quantity<>(1.0, WeightUnit.KILOGRAM), new Quantity<>(1000.0, WeightUnit.GRAM), WeightUnit.KILOGRAM);
+        // length
+        controller.performComparison(new QuantityDTO(1.0, LengthUnit.FEET), new QuantityDTO(12.0, LengthUnit.INCHES));
+        controller.performConversion(new QuantityDTO(1.0, LengthUnit.FEET), new QuantityDTO(0.0, LengthUnit.INCHES));
+        controller.performAddition(new QuantityDTO(1.0, LengthUnit.FEET), new QuantityDTO(12.0, LengthUnit.INCHES));
+        controller.performSubtraction(new QuantityDTO(10.0, LengthUnit.FEET), new QuantityDTO(6.0, LengthUnit.INCHES),
+                new QuantityDTO(0.0, LengthUnit.INCHES));
+        controller.performDivision(new QuantityDTO(24.0, LengthUnit.INCHES), new QuantityDTO(2.0, LengthUnit.FEET));
 
-        // volume operations (UC11)
-        Quantity<VolumeUnit> oneLitre = new Quantity<>(1.0, VolumeUnit.LITRE);
-        Quantity<VolumeUnit> thousandMillilitre = new Quantity<>(1000.0, VolumeUnit.MILLILITRE);
-        Quantity<VolumeUnit> oneGallon = new Quantity<>(1.0, VolumeUnit.GALLON);
-        demonstrateEquality(oneLitre, new Quantity<>(1.0, VolumeUnit.LITRE));
-        demonstrateEquality(oneLitre, thousandMillilitre);
-        demonstrateEquality(oneGallon, new Quantity<>(1.0, VolumeUnit.GALLON));
-        demonstrateEquality(oneLitre, new Quantity<>(0.264172, VolumeUnit.GALLON));
-        demonstrateEquality(new Quantity<>(500.0, VolumeUnit.MILLILITRE), new Quantity<>(0.5, VolumeUnit.LITRE));
-        demonstrateEquality(new Quantity<>(3.78541, VolumeUnit.LITRE), oneGallon);
-        demonstrateConversion(oneLitre, VolumeUnit.MILLILITRE);
-        demonstrateConversion(new Quantity<>(2.0, VolumeUnit.GALLON), VolumeUnit.LITRE);
-        demonstrateConversion(new Quantity<>(500.0, VolumeUnit.MILLILITRE), VolumeUnit.GALLON);
-        demonstrateConversion(new Quantity<>(0.0, VolumeUnit.LITRE), VolumeUnit.MILLILITRE);
-        demonstrateAddition(oneLitre, thousandMillilitre);
-        demonstrateAddition(oneLitre, oneGallon, VolumeUnit.MILLILITRE);
-        demonstrateAddition(thousandMillilitre, oneGallon, VolumeUnit.GALLON);
+        // weight
+        controller.performComparison(new QuantityDTO(1.0, WeightUnit.KILOGRAM), new QuantityDTO(1000.0, WeightUnit.GRAM));
+        controller.performAddition(new QuantityDTO(10.0, WeightUnit.KILOGRAM), new QuantityDTO(5000.0, WeightUnit.GRAM),
+                new QuantityDTO(0.0, WeightUnit.GRAM));
 
-        // subtraction (UC12)
-        demonstrateSubtraction(new Quantity<>(10.0, LengthUnit.FEET), new Quantity<>(6.0, LengthUnit.INCHES));
-        demonstrateSubtraction(new Quantity<>(10.0, WeightUnit.KILOGRAM), new Quantity<>(5000.0, WeightUnit.GRAM));
-        demonstrateSubtraction(new Quantity<>(5.0, VolumeUnit.LITRE), new Quantity<>(500.0, VolumeUnit.MILLILITRE));
-        demonstrateSubtraction(new Quantity<>(10.0, LengthUnit.FEET), new Quantity<>(6.0, LengthUnit.INCHES), LengthUnit.INCHES);
-        demonstrateSubtraction(new Quantity<>(10.0, WeightUnit.KILOGRAM), new Quantity<>(5000.0, WeightUnit.GRAM), WeightUnit.GRAM);
-        demonstrateSubtraction(new Quantity<>(5.0, VolumeUnit.LITRE), new Quantity<>(2.0, VolumeUnit.LITRE), VolumeUnit.MILLILITRE);
-        demonstrateSubtraction(new Quantity<>(5.0, LengthUnit.FEET), new Quantity<>(10.0, LengthUnit.FEET));
-        demonstrateSubtraction(new Quantity<>(10.0, LengthUnit.FEET), new Quantity<>(120.0, LengthUnit.INCHES));
+        // volume
+        controller.performConversion(new QuantityDTO(1.0, VolumeUnit.GALLON), new QuantityDTO(0.0, VolumeUnit.LITRE));
+        controller.performSubtraction(new QuantityDTO(5.0, VolumeUnit.LITRE), new QuantityDTO(500.0, VolumeUnit.MILLILITRE));
 
-        // division (UC12)
-        demonstrateDivision(new Quantity<>(10.0, LengthUnit.FEET), new Quantity<>(2.0, LengthUnit.FEET));
-        demonstrateDivision(new Quantity<>(24.0, LengthUnit.INCHES), new Quantity<>(2.0, LengthUnit.FEET));
-        demonstrateDivision(new Quantity<>(10.0, WeightUnit.KILOGRAM), new Quantity<>(5.0, WeightUnit.KILOGRAM));
-        demonstrateDivision(new Quantity<>(5.0, VolumeUnit.LITRE), new Quantity<>(10.0, VolumeUnit.LITRE));
-        demonstrateDivision(new Quantity<>(2000.0, WeightUnit.GRAM), new Quantity<>(1.0, WeightUnit.KILOGRAM));
+        // temperature: comparison and conversion work, arithmetic is rejected
+        controller.performComparison(new QuantityDTO(0.0, TemperatureUnit.CELSIUS), new QuantityDTO(32.0, TemperatureUnit.FAHRENHEIT));
+        controller.performConversion(new QuantityDTO(100.0, TemperatureUnit.CELSIUS), new QuantityDTO(0.0, TemperatureUnit.FAHRENHEIT));
+        controller.performAddition(new QuantityDTO(100.0, TemperatureUnit.CELSIUS), new QuantityDTO(50.0, TemperatureUnit.CELSIUS));
 
-        // centralized arithmetic (UC13), behaviour is the same as UC12
-        demonstrateAddition(new Quantity<>(10.0, WeightUnit.KILOGRAM), new Quantity<>(5000.0, WeightUnit.GRAM), WeightUnit.GRAM);
+        // error cases
+        controller.performAddition(new QuantityDTO(1.0, LengthUnit.FEET), new QuantityDTO(1.0, WeightUnit.KILOGRAM));
+        controller.performDivision(new QuantityDTO(10.0, LengthUnit.FEET), new QuantityDTO(0.0, LengthUnit.FEET));
 
-        // temperature operations (UC14)
-        demonstrateEquality(new Quantity<>(0.0, TemperatureUnit.CELSIUS), new Quantity<>(32.0, TemperatureUnit.FAHRENHEIT));
-        demonstrateEquality(new Quantity<>(273.15, TemperatureUnit.KELVIN), new Quantity<>(0.0, TemperatureUnit.CELSIUS));
-        demonstrateEquality(new Quantity<>(212.0, TemperatureUnit.FAHRENHEIT), new Quantity<>(100.0, TemperatureUnit.CELSIUS));
-        demonstrateEquality(new Quantity<>(100.0, TemperatureUnit.CELSIUS), new Quantity<>(373.15, TemperatureUnit.KELVIN));
-        demonstrateEquality(new Quantity<>(50.0, TemperatureUnit.CELSIUS), new Quantity<>(122.0, TemperatureUnit.FAHRENHEIT));
-        demonstrateConversion(new Quantity<>(100.0, TemperatureUnit.CELSIUS), TemperatureUnit.FAHRENHEIT);
-        demonstrateConversion(new Quantity<>(32.0, TemperatureUnit.FAHRENHEIT), TemperatureUnit.CELSIUS);
-        demonstrateConversion(new Quantity<>(273.15, TemperatureUnit.KELVIN), TemperatureUnit.CELSIUS);
-        demonstrateConversion(new Quantity<>(0.0, TemperatureUnit.CELSIUS), TemperatureUnit.KELVIN);
-        demonstrateConversion(new Quantity<>(-40.0, TemperatureUnit.CELSIUS), TemperatureUnit.FAHRENHEIT);
-        try {
-            demonstrateAddition(new Quantity<>(100.0, TemperatureUnit.CELSIUS), new Quantity<>(50.0, TemperatureUnit.CELSIUS));
-        } catch (UnsupportedOperationException e) {
-            logger.error("Input: Quantity(100.0, CELSIUS).add(Quantity(50.0, CELSIUS)) -> Error: {}", e.getMessage());
-        }
-
-        // cross category comparison is always false
-        Quantity<LengthUnit> oneFoot = new Quantity<>(1.0, LengthUnit.FEET);
-        Quantity<WeightUnit> oneKilogram = new Quantity<>(1.0, WeightUnit.KILOGRAM);
-        logger.info("Input: {}.equals({}) -> Output: {}", oneFoot, oneKilogram, oneFoot.equals(oneKilogram));
+        logger.info("Total measurements stored: {}", app.getRepository().getAllMeasurements().size());
     }
 }

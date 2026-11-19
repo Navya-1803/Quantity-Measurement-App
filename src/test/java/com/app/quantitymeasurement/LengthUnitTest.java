@@ -86,4 +86,19 @@ class LengthUnitTest {
     void testGetUnitName() {
         assertEquals("FEET", LengthUnit.FEET.getUnitName());
     }
+
+    @Test
+    void testGetUnitInstance_ValidName() {
+        assertEquals(LengthUnit.INCHES, LengthUnit.INCHES.getUnitInstance("inches"));
+    }
+
+    @Test
+    void testGetUnitInstance_InvalidName() {
+        assertThrows(IllegalArgumentException.class, () -> LengthUnit.INCHES.getUnitInstance("UNKNOWN"));
+    }
+
+    @Test
+    void testGetMeasurementType() {
+        assertEquals("LengthUnit", LengthUnit.INCHES.getMeasurementType());
+    }
 }

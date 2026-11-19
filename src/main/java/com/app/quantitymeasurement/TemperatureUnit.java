@@ -54,6 +54,19 @@ public enum TemperatureUnit implements IMeasurable {
     }
 
     @Override
+    public IMeasurable getUnitInstance(String unitName) {
+        if (unitName == null || unitName.isBlank()) {
+            throw new IllegalArgumentException("Unit name cannot be empty");
+        }
+        for (TemperatureUnit unit : values()) {
+            if (unit.name().equalsIgnoreCase(unitName.trim())) {
+                return unit;
+            }
+        }
+        throw new IllegalArgumentException("Invalid unit '" + unitName + "' for TemperatureUnit");
+    }
+
+    @Override
     public boolean supportsArithmetic() {
         return TEMPERATURE_ARITHMETIC.isSupported();
     }

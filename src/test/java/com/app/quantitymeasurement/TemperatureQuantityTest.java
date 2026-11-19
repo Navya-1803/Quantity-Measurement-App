@@ -193,8 +193,10 @@ class TemperatureQuantityTest {
 
     @Test
     void testTemperatureIntegrationWithGenericQuantity() {
-        assertTrue(QuantityMeasurementApp.demonstrateEquality(new Quantity<>(0.0, TemperatureUnit.CELSIUS), new Quantity<>(32.0, TemperatureUnit.FAHRENHEIT)));
-        assertEquals(new Quantity<>(212.0, TemperatureUnit.FAHRENHEIT),
-                QuantityMeasurementApp.demonstrateConversion(new Quantity<>(100.0, TemperatureUnit.CELSIUS), TemperatureUnit.FAHRENHEIT));
+        QuantityMeasurementController controller = QuantityMeasurementApp.getInstance().getController();
+        assertTrue(controller.performComparison(new QuantityDTO(0.0, QuantityDTO.TemperatureUnit.CELSIUS),
+                new QuantityDTO(32.0, QuantityDTO.TemperatureUnit.FAHRENHEIT)));
+        assertEquals(212.0, controller.performConversion(new QuantityDTO(100.0, QuantityDTO.TemperatureUnit.CELSIUS),
+                new QuantityDTO(0.0, QuantityDTO.TemperatureUnit.FAHRENHEIT)).getValue(), DELTA);
     }
 }

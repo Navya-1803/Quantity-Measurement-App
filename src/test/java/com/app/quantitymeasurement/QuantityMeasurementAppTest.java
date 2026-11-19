@@ -36,4 +36,18 @@ class QuantityMeasurementAppTest {
     void testMain_RunsWithoutException() {
         assertDoesNotThrow(() -> QuantityMeasurementApp.main(new String[]{}));
     }
+
+    @Test
+    void testDemonstrateSubtraction() {
+        assertEquals(new Quantity<>(9.5, LengthUnit.FEET), QuantityMeasurementApp.demonstrateSubtraction(
+                new Quantity<>(10.0, LengthUnit.FEET), new Quantity<>(6.0, LengthUnit.INCHES)));
+        assertEquals(new Quantity<>(3000.0, VolumeUnit.MILLILITRE), QuantityMeasurementApp.demonstrateSubtraction(
+                new Quantity<>(5.0, VolumeUnit.LITRE), new Quantity<>(2.0, VolumeUnit.LITRE), VolumeUnit.MILLILITRE));
+    }
+
+    @Test
+    void testDemonstrateDivision() {
+        assertEquals(5.0, QuantityMeasurementApp.demonstrateDivision(new Quantity<>(10.0, LengthUnit.FEET), new Quantity<>(2.0, LengthUnit.FEET)), 1e-6);
+        assertThrows(IllegalArgumentException.class, () -> QuantityMeasurementApp.demonstrateDivision(null, new Quantity<>(2.0, LengthUnit.FEET)));
+    }
 }

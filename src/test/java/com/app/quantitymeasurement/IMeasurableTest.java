@@ -12,6 +12,7 @@ class IMeasurableTest {
     void testAllUnits_ImplementIMeasurable() {
         assertInstanceOf(IMeasurable.class, LengthUnit.FEET);
         assertInstanceOf(IMeasurable.class, WeightUnit.KILOGRAM);
+        assertInstanceOf(IMeasurable.class, VolumeUnit.LITRE);
     }
 
     @Test
@@ -20,6 +21,9 @@ class IMeasurableTest {
             assertEquals(9.0, unit.convertFromBaseUnit(unit.convertToBaseUnit(9.0)), DELTA);
         }
         for (IMeasurable unit : WeightUnit.values()) {
+            assertEquals(9.0, unit.convertFromBaseUnit(unit.convertToBaseUnit(9.0)), DELTA);
+        }
+        for (IMeasurable unit : VolumeUnit.values()) {
             assertEquals(9.0, unit.convertFromBaseUnit(unit.convertToBaseUnit(9.0)), DELTA);
         }
     }

@@ -29,5 +29,10 @@ public class QuantityMeasurementApp {
     public static void main(String[] args) {
         demonstrateLengthEquality(new QuantityLength(1.0, LengthUnit.FEET), new QuantityLength(12.0, LengthUnit.INCHES));
         demonstrateLengthEquality(new QuantityLength(1.0, LengthUnit.INCHES), new QuantityLength(1.0, LengthUnit.INCHES));
+        demonstrateLengthEquality(new QuantityLength(1.0, LengthUnit.YARDS), new QuantityLength(3.0, LengthUnit.FEET));
+        demonstrateLengthEquality(new QuantityLength(1.0, LengthUnit.YARDS), new QuantityLength(36.0, LengthUnit.INCHES));
+        demonstrateLengthEquality(new QuantityLength(2.0, LengthUnit.YARDS), new QuantityLength(2.0, LengthUnit.YARDS));
+        demonstrateLengthEquality(new QuantityLength(2.0, LengthUnit.CENTIMETERS), new QuantityLength(2.0, LengthUnit.CENTIMETERS));
+        demonstrateLengthEquality(new QuantityLength(1.0, LengthUnit.CENTIMETERS), new QuantityLength(0.393701, LengthUnit.INCHES));
     }
 }

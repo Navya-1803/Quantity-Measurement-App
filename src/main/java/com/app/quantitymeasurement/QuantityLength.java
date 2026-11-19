@@ -17,7 +17,11 @@ public class QuantityLength {
      */
     public enum LengthUnit {
         FEET(1.0),
-        INCHES(1.0 / 12.0);
+        INCHES(1.0 / 12.0),
+        // 1 yard = 3 feet
+        YARDS(3.0),
+        // 1 cm = 0.393701 inches
+        CENTIMETERS(0.393701 / 12.0);
 
         private final double conversionFactor;
 

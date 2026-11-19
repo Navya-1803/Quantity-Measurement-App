@@ -152,7 +152,7 @@ class WeightQuantityTest {
     @Test
     void testAddition_ExplicitTargetUnit_Kilogram() {
         Quantity<WeightUnit> result = new Quantity<>(2.0, WeightUnit.KILOGRAM).add(new Quantity<>(4.0, WeightUnit.POUND), WeightUnit.KILOGRAM);
-        assertEquals(3.814368, result.getValue(), DELTA);
+        assertEquals(3.81, result.getValue(), DELTA);
     }
 
     @Test

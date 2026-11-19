@@ -60,27 +60,20 @@ public class Quantity<U extends IMeasurable> {
     }
 
     /**
-     * Adds another quantity and expresses the result in the target unit.
+     * Adds another quantity and expresses the result in the target unit,
+     * rounded to two decimal places.
      *
-     * @throws IllegalArgumentException if other or target unit is null
+     * @throws IllegalArgumentException if other / target unit is null or categories differ
      */
     public Quantity<U> add(Quantity<U> other, U targetUnit) {
-        if (other == null) {
-            throw new IllegalArgumentException("Quantity to add cannot be null");
-        }
-        if (targetUnit == null) {
-            throw new IllegalArgumentException("Target unit cannot be null");
-        }
-        double sum = this.toBaseUnit() + other.toBaseUnit();
-        return new Quantity<>(targetUnit.convertFromBaseUnit(sum), targetUnit);
+        validateArithmeticOperands(other, targetUnit, true);
+        double baseResult = performBaseArithmetic(other, ArithmeticOperation.ADD);
+        return toTargetUnit(baseResult, targetUnit);
     }
 
     /**
      * Subtracts another quantity from this one, the result is in the unit of
-     * this (first) operand and rounded to two decimal places.
-     * Subtraction is not commutative: a - b is not the same as b - a.
-     *
-     * @throws IllegalArgumentException if other is null or of a different category
+     * this (first) operand. Subtraction is not commutative.
      */
     public Quantity<U> subtract(Quantity<U> other) {
         return subtract(other, unit);
@@ -93,39 +86,53 @@ public class Quantity<U extends IMeasurable> {
      * @throws IllegalArgumentException if other / target unit is null or categories differ
      */
     public Quantity<U> subtract(Quantity<U> other, U targetUnit) {
-        if (other == null) {
-            throw new IllegalArgumentException("Quantity to subtract cannot be null");
-        }
-        if (targetUnit == null) {
-            throw new IllegalArgumentException("Target unit cannot be null");
-        }
-        if (this.unit.getClass() != other.unit.getClass()) {
-            throw new IllegalArgumentException("Cannot subtract quantities of different categories");
-        }
-        double difference = this.toBaseUnit() - other.toBaseUnit();
-        return new Quantity<>(roundToTwoDecimals(targetUnit.convertFromBaseUnit(difference)), targetUnit);
+        validateArithmeticOperands(other, targetUnit, true);
+        double baseResult = performBaseArithmetic(other, ArithmeticOperation.SUBTRACT);
+        return toTargetUnit(baseResult, targetUnit);
     }
 
     /**
-     * Divides this quantity by another one of the same category.
-     * The result is a plain number (ratio), e.g. 24 INCHES / 2 FEET = 1.0
+     * Divides this quantity by another one of the same category. The result
+     * is a plain ratio and is not rounded, e.g. 24 INCHES / 2 FEET = 1.0
      *
-     * @return ratio of this quantity to the other quantity
      * @throws IllegalArgumentException if other is null or of a different category
      * @throws ArithmeticException      if other is zero
      */
     public double divide(Quantity<U> other) {
+        validateArithmeticOperands(other, null, false);
+        return performBaseArithmetic(other, ArithmeticOperation.DIVIDE);
+    }
+
+    /**
+     * Single place for all operand validation so every operation behaves
+     * and reports errors the same way.
+     */
+    private void validateArithmeticOperands(Quantity<U> other, U targetUnit, boolean targetUnitRequired) {
         if (other == null) {
-            throw new IllegalArgumentException("Quantity to divide by cannot be null");
+            throw new IllegalArgumentException("Operand quantity cannot be null");
         }
         if (this.unit.getClass() != other.unit.getClass()) {
-            throw new IllegalArgumentException("Cannot divide quantities of different categories");
+            throw new IllegalArgumentException("Cannot perform arithmetic between different measurement categories: "
+                    + this.unit.getClass().getSimpleName() + " and " + other.unit.getClass().getSimpleName());
         }
-        double divisor = other.toBaseUnit();
-        if (Math.abs(divisor) < EPSILON) {
-            throw new ArithmeticException("Cannot divide by zero quantity");
+        if (!Double.isFinite(this.value) || !Double.isFinite(other.value)) {
+            throw new IllegalArgumentException("Operand values must be finite numbers");
         }
-        return this.toBaseUnit() / divisor;
+        if (targetUnitRequired && targetUnit == null) {
+            throw new IllegalArgumentException("Target unit cannot be null");
+        }
+    }
+
+    /**
+     * Converts both operands to the base unit and applies the operation.
+     */
+    private double performBaseArithmetic(Quantity<U> other, ArithmeticOperation operation) {
+        return operation.compute(this.toBaseUnit(), other.toBaseUnit());
+    }
+
+    // converts a base unit result to the target unit, rounded to two decimals
+    private Quantity<U> toTargetUnit(double baseValue, U targetUnit) {
+        return new Quantity<>(roundToTwoDecimals(targetUnit.convertFromBaseUnit(baseValue)), targetUnit);
     }
 
     // rounds a value to two decimal places

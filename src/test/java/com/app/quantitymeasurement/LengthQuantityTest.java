@@ -320,7 +320,7 @@ class LengthQuantityTest {
 
     @Test
     void testAddition_SmallValues() {
-        assertEquals(0.003, new Quantity<>(0.001, LengthUnit.FEET).add(new Quantity<>(0.002, LengthUnit.FEET)).getValue(), DELTA);
+        assertEquals(0.03, new Quantity<>(0.01, LengthUnit.FEET).add(new Quantity<>(0.02, LengthUnit.FEET)).getValue(), DELTA);
     }
 
     // ---------- UC7: addition with target unit ----------
@@ -339,7 +339,7 @@ class LengthQuantityTest {
 
     @Test
     void testAddition_ExplicitTargetUnit_Yards() {
-        assertEquals(0.667, new Quantity<>(1.0, LengthUnit.FEET).add(new Quantity<>(12.0, LengthUnit.INCHES), LengthUnit.YARDS).getValue(), 1e-3);
+        assertEquals(0.67, new Quantity<>(1.0, LengthUnit.FEET).add(new Quantity<>(12.0, LengthUnit.INCHES), LengthUnit.YARDS).getValue(), DELTA);
     }
 
     @Test
@@ -369,7 +369,7 @@ class LengthQuantityTest {
 
     @Test
     void testAddition_ExplicitTargetUnit_WithZero() {
-        assertEquals(1.667, new Quantity<>(5.0, LengthUnit.FEET).add(new Quantity<>(0.0, LengthUnit.INCHES), LengthUnit.YARDS).getValue(), 1e-3);
+        assertEquals(1.67, new Quantity<>(5.0, LengthUnit.FEET).add(new Quantity<>(0.0, LengthUnit.INCHES), LengthUnit.YARDS).getValue(), DELTA);
     }
 
     @Test
@@ -390,7 +390,7 @@ class LengthQuantityTest {
 
     @Test
     void testAddition_ExplicitTargetUnit_SmallToLargeScale() {
-        assertEquals(0.667, new Quantity<>(12.0, LengthUnit.INCHES).add(new Quantity<>(12.0, LengthUnit.INCHES), LengthUnit.YARDS).getValue(), 1e-3);
+        assertEquals(0.67, new Quantity<>(12.0, LengthUnit.INCHES).add(new Quantity<>(12.0, LengthUnit.INCHES), LengthUnit.YARDS).getValue(), DELTA);
     }
 
     @Test
@@ -402,7 +402,8 @@ class LengthQuantityTest {
                     Quantity<LengthUnit> b = new Quantity<>(2.0, second);
                     double expectedFeet = first.getConversionFactor() + 2.0 * second.getConversionFactor();
                     double actual = a.add(b, target).getValue();
-                    assertEquals(expectedFeet / target.getConversionFactor(), actual, DELTA);
+                    // results are rounded to two decimal places since UC13
+                    assertEquals(expectedFeet / target.getConversionFactor(), actual, 0.005);
                 }
             }
         }

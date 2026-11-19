@@ -1,11 +1,14 @@
 package com.app.quantitymeasurement;
 
 import com.app.quantitymeasurement.QuantityMeasurementApp.Feet;
+import com.app.quantitymeasurement.QuantityMeasurementApp.Inches;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class QuantityMeasurementAppTest {
+
+    // ---------- Feet ----------
 
     @Test
     void testEquality_SameValue() {
@@ -31,6 +34,51 @@ class QuantityMeasurementAppTest {
     void testEquality_SameReference() {
         Feet feet = new Feet(1.0);
         assertTrue(feet.equals(feet), "a value should be equal to itself");
+    }
+
+    // ---------- Inches ----------
+
+    @Test
+    void testInchesEquality_SameValue() {
+        assertTrue(new Inches(1.0).equals(new Inches(1.0)), "1.0 inch should be equal to 1.0 inch");
+    }
+
+    @Test
+    void testInchesEquality_DifferentValue() {
+        assertFalse(new Inches(1.0).equals(new Inches(2.0)), "1.0 inch should not be equal to 2.0 inch");
+    }
+
+    @Test
+    void testInchesEquality_NullComparison() {
+        assertFalse(new Inches(1.0).equals(null), "a value should not be equal to null");
+    }
+
+    @Test
+    void testInchesEquality_NonNumericInput() {
+        assertFalse(new Inches(1.0).equals("1.0"), "a value should not be equal to a non numeric input");
+    }
+
+    @Test
+    void testInchesEquality_SameReference() {
+        Inches inches = new Inches(1.0);
+        assertTrue(inches.equals(inches), "a value should be equal to itself");
+    }
+
+    @Test
+    void testFeetAndInches_AreTreatedSeparately() {
+        assertFalse(new Feet(1.0).equals(new Inches(1.0)), "feet and inches are not compared with each other in UC2");
+    }
+
+    @Test
+    void testDemonstrateFeetEquality() {
+        assertTrue(QuantityMeasurementApp.demonstrateFeetEquality(1.0, 1.0));
+        assertFalse(QuantityMeasurementApp.demonstrateFeetEquality(1.0, 2.0));
+    }
+
+    @Test
+    void testDemonstrateInchesEquality() {
+        assertTrue(QuantityMeasurementApp.demonstrateInchesEquality(1.0, 1.0));
+        assertFalse(QuantityMeasurementApp.demonstrateInchesEquality(1.0, 2.0));
     }
 
     @Test
@@ -66,6 +114,7 @@ class QuantityMeasurementAppTest {
     void testConstructor_InvalidValue() {
         assertThrows(IllegalArgumentException.class, () -> new Feet(Double.NaN), "NaN should be rejected");
         assertThrows(IllegalArgumentException.class, () -> new Feet(Double.POSITIVE_INFINITY), "infinity should be rejected");
+        assertThrows(IllegalArgumentException.class, () -> new Inches(Double.NaN), "NaN should be rejected");
     }
 
     @Test

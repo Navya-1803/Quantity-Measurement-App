@@ -81,4 +81,9 @@ class LengthUnitTest {
         LengthUnit.YARDS.convertToBaseUnit(10.0);
         assertEquals(before, LengthUnit.YARDS.getConversionFactor(), DELTA);
     }
+
+    @Test
+    void testGetUnitName() {
+        assertEquals("FEET", LengthUnit.FEET.getUnitName());
+    }
 }

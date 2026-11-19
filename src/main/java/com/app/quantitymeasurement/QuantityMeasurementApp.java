@@ -138,6 +138,9 @@ public class QuantityMeasurementApp {
         demonstrateDivision(new Quantity<>(5.0, VolumeUnit.LITRE), new Quantity<>(10.0, VolumeUnit.LITRE));
         demonstrateDivision(new Quantity<>(2000.0, WeightUnit.GRAM), new Quantity<>(1.0, WeightUnit.KILOGRAM));
 
+        // centralized arithmetic (UC13), behaviour is the same as UC12
+        demonstrateAddition(new Quantity<>(10.0, WeightUnit.KILOGRAM), new Quantity<>(5000.0, WeightUnit.GRAM), WeightUnit.GRAM);
+
         // cross category comparison is always false
         Quantity<LengthUnit> oneFoot = new Quantity<>(1.0, LengthUnit.FEET);
         Quantity<WeightUnit> oneKilogram = new Quantity<>(1.0, WeightUnit.KILOGRAM);

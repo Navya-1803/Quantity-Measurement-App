@@ -3,7 +3,9 @@ package com.app.quantitymeasurement;
 /**
  * Quantity is a generic measurement made of a value and a unit. It replaces
  * QuantityLength and QuantityWeight, any unit enum implementing
- * {@link IMeasurable} can be used without writing a new class.
+ * {@link IMeasurable} can be used without writing a new class. Units that
+ * do not support arithmetic (like temperature) can still be compared and
+ * converted.
  *
  * @param <U> unit type, for example LengthUnit or WeightUnit
  * @author Navya Raj
@@ -124,9 +126,13 @@ public class Quantity<U extends IMeasurable> {
     }
 
     /**
-     * Converts both operands to the base unit and applies the operation.
+     * Checks that the unit supports the operation, then converts both
+     * operands to the base unit and applies the operation.
+     *
+     * @throws UnsupportedOperationException if the unit category does not allow the operation
      */
     private double performBaseArithmetic(Quantity<U> other, ArithmeticOperation operation) {
+        unit.validateOperationSupport(operation.name());
         return operation.compute(this.toBaseUnit(), other.toBaseUnit());
     }
 

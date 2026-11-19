@@ -13,6 +13,7 @@ class IMeasurableTest {
         assertInstanceOf(IMeasurable.class, LengthUnit.FEET);
         assertInstanceOf(IMeasurable.class, WeightUnit.KILOGRAM);
         assertInstanceOf(IMeasurable.class, VolumeUnit.LITRE);
+        assertInstanceOf(IMeasurable.class, TemperatureUnit.CELSIUS);
     }
 
     @Test
@@ -32,5 +33,17 @@ class IMeasurableTest {
     void testGetUnitName_MatchesEnumName() {
         assertEquals("CENTIMETERS", LengthUnit.CENTIMETERS.getUnitName());
         assertEquals("POUND", WeightUnit.POUND.getUnitName());
+    }
+
+    @Test
+    void testDefaultSupportsArithmetic_True() {
+        assertTrue(LengthUnit.FEET.supportsArithmetic());
+        assertTrue(WeightUnit.KILOGRAM.supportsArithmetic());
+        assertTrue(VolumeUnit.LITRE.supportsArithmetic());
+    }
+
+    @Test
+    void testDefaultValidateOperationSupport_DoesNothing() {
+        assertDoesNotThrow(() -> LengthUnit.YARDS.validateOperationSupport("SUBTRACT"));
     }
 }

@@ -63,4 +63,26 @@ class QuantityMeasurementAppTest {
                 new QuantityLength(1.0, LengthUnit.FEET), new QuantityLength(12.0, LengthUnit.INCHES), LengthUnit.INCHES);
         assertEquals(new QuantityLength(24.0, LengthUnit.INCHES), result);
     }
+
+    @Test
+    void testDemonstrateWeightEquality() {
+        assertTrue(QuantityMeasurementApp.demonstrateWeightEquality(
+                new QuantityWeight(1.0, WeightUnit.KILOGRAM), new QuantityWeight(1000.0, WeightUnit.GRAM)));
+        assertThrows(IllegalArgumentException.class, () -> QuantityMeasurementApp.demonstrateWeightEquality(
+                null, new QuantityWeight(1.0, WeightUnit.GRAM)));
+    }
+
+    @Test
+    void testDemonstrateWeightConversion() {
+        assertEquals(new QuantityWeight(1000.0, WeightUnit.GRAM),
+                QuantityMeasurementApp.demonstrateWeightConversion(new QuantityWeight(1.0, WeightUnit.KILOGRAM), WeightUnit.GRAM));
+    }
+
+    @Test
+    void testDemonstrateWeightAddition() {
+        assertEquals(new QuantityWeight(2.0, WeightUnit.KILOGRAM), QuantityMeasurementApp.demonstrateWeightAddition(
+                new QuantityWeight(1.0, WeightUnit.KILOGRAM), new QuantityWeight(1000.0, WeightUnit.GRAM)));
+        assertEquals(new QuantityWeight(2000.0, WeightUnit.GRAM), QuantityMeasurementApp.demonstrateWeightAddition(
+                new QuantityWeight(1.0, WeightUnit.KILOGRAM), new QuantityWeight(1000.0, WeightUnit.GRAM), WeightUnit.GRAM));
+    }
 }

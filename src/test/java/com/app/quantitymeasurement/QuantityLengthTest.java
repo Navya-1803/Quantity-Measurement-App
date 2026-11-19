@@ -1,6 +1,5 @@
 package com.app.quantitymeasurement;
 
-import com.app.quantitymeasurement.QuantityLength.LengthUnit;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -413,5 +412,43 @@ class QuantityLengthTest {
         QuantityLength sum = new QuantityLength(0.1, LengthUnit.FEET)
                 .add(new QuantityLength(0.2, LengthUnit.FEET), LengthUnit.FEET);
         assertEquals(new QuantityLength(0.3, LengthUnit.FEET), sum);
+    }
+
+    // ---------- UC8: refactored design using standalone LengthUnit ----------
+
+    @Test
+    void testQuantityLengthRefactored_Equality() {
+        assertEquals(new QuantityLength(36.0, LengthUnit.INCHES), new QuantityLength(1.0, LengthUnit.YARDS));
+    }
+
+    @Test
+    void testQuantityLengthRefactored_ConvertTo() {
+        assertEquals(new QuantityLength(12.0, LengthUnit.INCHES), new QuantityLength(1.0, LengthUnit.FEET).convertTo(LengthUnit.INCHES));
+    }
+
+    @Test
+    void testQuantityLengthRefactored_Add() {
+        assertEquals(new QuantityLength(2.0, LengthUnit.FEET), new QuantityLength(1.0, LengthUnit.FEET).add(new QuantityLength(12.0, LengthUnit.INCHES)));
+    }
+
+    @Test
+    void testQuantityLengthRefactored_AddWithTargetUnit() {
+        assertEquals(new QuantityLength(2.0, LengthUnit.YARDS),
+                new QuantityLength(1.0, LengthUnit.YARDS).add(new QuantityLength(3.0, LengthUnit.FEET), LengthUnit.YARDS));
+    }
+
+    @Test
+    void testQuantityLengthRefactored_NullUnit() {
+        assertThrows(IllegalArgumentException.class, () -> new QuantityLength(1.0, null));
+    }
+
+    @Test
+    void testQuantityLengthRefactored_InvalidValue() {
+        assertThrows(IllegalArgumentException.class, () -> new QuantityLength(Double.NEGATIVE_INFINITY, LengthUnit.FEET));
+    }
+
+    @Test
+    void testQuantityLengthRefactored_ConvertToNullUnit() {
+        assertThrows(IllegalArgumentException.class, () -> new QuantityLength(1.0, LengthUnit.FEET).convertTo(null));
     }
 }

@@ -72,6 +72,24 @@ public class QuantityMeasurementApp {
         demonstrateConversion(new Quantity<>(1.0, WeightUnit.KILOGRAM), WeightUnit.GRAM);
         demonstrateAddition(new Quantity<>(1.0, WeightUnit.KILOGRAM), new Quantity<>(1000.0, WeightUnit.GRAM), WeightUnit.KILOGRAM);
 
+        // volume operations (UC11)
+        Quantity<VolumeUnit> oneLitre = new Quantity<>(1.0, VolumeUnit.LITRE);
+        Quantity<VolumeUnit> thousandMillilitre = new Quantity<>(1000.0, VolumeUnit.MILLILITRE);
+        Quantity<VolumeUnit> oneGallon = new Quantity<>(1.0, VolumeUnit.GALLON);
+        demonstrateEquality(oneLitre, new Quantity<>(1.0, VolumeUnit.LITRE));
+        demonstrateEquality(oneLitre, thousandMillilitre);
+        demonstrateEquality(oneGallon, new Quantity<>(1.0, VolumeUnit.GALLON));
+        demonstrateEquality(oneLitre, new Quantity<>(0.264172, VolumeUnit.GALLON));
+        demonstrateEquality(new Quantity<>(500.0, VolumeUnit.MILLILITRE), new Quantity<>(0.5, VolumeUnit.LITRE));
+        demonstrateEquality(new Quantity<>(3.78541, VolumeUnit.LITRE), oneGallon);
+        demonstrateConversion(oneLitre, VolumeUnit.MILLILITRE);
+        demonstrateConversion(new Quantity<>(2.0, VolumeUnit.GALLON), VolumeUnit.LITRE);
+        demonstrateConversion(new Quantity<>(500.0, VolumeUnit.MILLILITRE), VolumeUnit.GALLON);
+        demonstrateConversion(new Quantity<>(0.0, VolumeUnit.LITRE), VolumeUnit.MILLILITRE);
+        demonstrateAddition(oneLitre, thousandMillilitre);
+        demonstrateAddition(oneLitre, oneGallon, VolumeUnit.MILLILITRE);
+        demonstrateAddition(thousandMillilitre, oneGallon, VolumeUnit.GALLON);
+
         // cross category comparison is always false
         Quantity<LengthUnit> oneFoot = new Quantity<>(1.0, LengthUnit.FEET);
         Quantity<WeightUnit> oneKilogram = new Quantity<>(1.0, WeightUnit.KILOGRAM);

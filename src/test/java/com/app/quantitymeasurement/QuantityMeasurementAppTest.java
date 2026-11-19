@@ -1,5 +1,8 @@
 package com.app.quantitymeasurement;
 
+import com.app.quantitymeasurement.entity.QuantityDTO;
+import com.app.quantitymeasurement.repository.QuantityMeasurementDatabaseRepository;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -15,7 +18,8 @@ class QuantityMeasurementAppTest {
     void testApp_CreatesAllLayers() {
         QuantityMeasurementApp app = QuantityMeasurementApp.getInstance();
         assertNotNull(app.getController());
-        assertInstanceOf(QuantityMeasurementCacheRepository.class, app.getRepository());
+        // application.properties selects the database repository
+        assertInstanceOf(QuantityMeasurementDatabaseRepository.class, app.getRepository());
     }
 
     @Test
@@ -28,5 +32,15 @@ class QuantityMeasurementAppTest {
     @Test
     void testMain_RunsWithoutException() {
         assertDoesNotThrow(() -> QuantityMeasurementApp.main(new String[]{}));
+    }
+
+    @Test
+    void testReportAndDeleteAllMeasurements() {
+        QuantityMeasurementApp app = QuantityMeasurementApp.getInstance();
+        app.getController().performComparison(new QuantityDTO(1.0, QuantityDTO.LengthUnit.FEET),
+                new QuantityDTO(12.0, QuantityDTO.LengthUnit.INCHES));
+        assertDoesNotThrow(app::reportAllMeasurements);
+        app.deleteAllMeasurements();
+        assertEquals(0, app.getRepository().getTotalCount());
     }
 }

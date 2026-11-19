@@ -1,16 +1,25 @@
 package com.app.quantitymeasurement;
 
-import com.app.quantitymeasurement.QuantityDTO.LengthUnit;
-import com.app.quantitymeasurement.QuantityDTO.TemperatureUnit;
-import com.app.quantitymeasurement.QuantityDTO.VolumeUnit;
-import com.app.quantitymeasurement.QuantityDTO.WeightUnit;
+import com.app.quantitymeasurement.controller.QuantityMeasurementController;
+import com.app.quantitymeasurement.entity.QuantityDTO;
+import com.app.quantitymeasurement.entity.QuantityDTO.LengthUnit;
+import com.app.quantitymeasurement.entity.QuantityDTO.TemperatureUnit;
+import com.app.quantitymeasurement.entity.QuantityDTO.VolumeUnit;
+import com.app.quantitymeasurement.entity.QuantityDTO.WeightUnit;
+import com.app.quantitymeasurement.repository.IQuantityMeasurementRepository;
+import com.app.quantitymeasurement.repository.RepositoryFactory;
+import com.app.quantitymeasurement.service.IQuantityMeasurementService;
+import com.app.quantitymeasurement.service.QuantityMeasurementServiceImpl;
+import com.app.quantitymeasurement.util.ApplicationConfig;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * QuantityMeasurementApp is the entry point of the application. It creates
- * the repository, service and controller (Factory), and runs every
- * operation through the controller (Facade). The app itself is a Singleton.
+ * QuantityMeasurementApp is the entry point of the application. It reads
+ * the configuration, creates the repository (cache or database), service
+ * and controller (Factory), and runs every operation through the
+ * controller (Facade). The app itself is a Singleton.
  *
  * @author Navya Raj
  */
@@ -24,7 +33,7 @@ public class QuantityMeasurementApp {
     private final QuantityMeasurementController controller;
 
     private QuantityMeasurementApp() {
-        this.repository = createRepository();
+        this.repository = createRepository(new ApplicationConfig());
         this.controller = createController(createService(repository));
         logger.info("QuantityMeasurementApp initialized");
     }
@@ -32,13 +41,17 @@ public class QuantityMeasurementApp {
     public static synchronized QuantityMeasurementApp getInstance() {
         if (instance == null) {
             instance = new QuantityMeasurementApp();
+            // release database connections when the JVM shuts down
+            Runtime.getRuntime().addShutdownHook(new Thread(instance::closeResources));
         }
         return instance;
     }
 
     // factory methods for each layer
-    private static IQuantityMeasurementRepository createRepository() {
-        return QuantityMeasurementCacheRepository.getInstance();
+    private static IQuantityMeasurementRepository createRepository(ApplicationConfig config) {
+        IQuantityMeasurementRepository repository = RepositoryFactory.createRepository(config);
+        logger.info("Using repository: {}", repository.getClass().getSimpleName());
+        return repository;
     }
 
     private static IQuantityMeasurementService createService(IQuantityMeasurementRepository repository) {
@@ -55,6 +68,31 @@ public class QuantityMeasurementApp {
 
     public IQuantityMeasurementRepository getRepository() {
         return repository;
+    }
+
+    /**
+     * Logs every stored measurement and the repository statistics.
+     */
+    public void reportAllMeasurements() {
+        logger.info("---------- Stored measurements ----------");
+        repository.getAllMeasurements().forEach(entity -> logger.info("{}", entity));
+        logger.info("Total measurements: {}", repository.getTotalCount());
+        logger.info("Pool statistics: {}", repository.getPoolStatistics());
+    }
+
+    /**
+     * Removes every stored measurement.
+     */
+    public void deleteAllMeasurements() {
+        repository.deleteAll();
+    }
+
+    /**
+     * Releases repository resources such as database connections.
+     */
+    public void closeResources() {
+        repository.releaseResources();
+        logger.info("Application resources released");
     }
 
     public static void main(String[] args) {
@@ -87,6 +125,7 @@ public class QuantityMeasurementApp {
         controller.performAddition(new QuantityDTO(1.0, LengthUnit.FEET), new QuantityDTO(1.0, WeightUnit.KILOGRAM));
         controller.performDivision(new QuantityDTO(10.0, LengthUnit.FEET), new QuantityDTO(0.0, LengthUnit.FEET));
 
-        logger.info("Total measurements stored: {}", app.getRepository().getAllMeasurements().size());
+        app.reportAllMeasurements();
+        app.deleteAllMeasurements();
     }
 }

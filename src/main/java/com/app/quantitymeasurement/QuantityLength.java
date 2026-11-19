@@ -94,6 +94,23 @@ public class QuantityLength {
         return new QuantityLength(convert(value, unit, target), target);
     }
 
+    /**
+     * Adds another length to this one. The result is expressed in the unit of
+     * this (first) operand. Both operands stay unchanged.
+     *
+     * @param other length to add
+     * @return new QuantityLength holding the sum
+     * @throws IllegalArgumentException if other is null
+     */
+    public QuantityLength add(QuantityLength other) {
+        if (other == null) {
+            throw new IllegalArgumentException("Length to add cannot be null");
+        }
+        // add in the base unit and convert the sum back to this unit
+        double sumInFeet = this.convertToFeet() + other.convertToFeet();
+        return new QuantityLength(sumInFeet / unit.getConversionFactor(), unit);
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

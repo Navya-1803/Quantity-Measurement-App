@@ -45,4 +45,16 @@ class QuantityMeasurementAppTest {
     void testDemonstrateLengthConversion_NullQuantity() {
         assertThrows(IllegalArgumentException.class, () -> QuantityMeasurementApp.demonstrateLengthConversion(null, LengthUnit.FEET));
     }
+
+    @Test
+    void testDemonstrateLengthAddition() {
+        assertEquals(new QuantityLength(2.0, LengthUnit.FEET), QuantityMeasurementApp.demonstrateLengthAddition(
+                new QuantityLength(1.0, LengthUnit.FEET), new QuantityLength(12.0, LengthUnit.INCHES)));
+    }
+
+    @Test
+    void testDemonstrateLengthAddition_NullFirstOperand() {
+        assertThrows(IllegalArgumentException.class, () -> QuantityMeasurementApp.demonstrateLengthAddition(
+                null, new QuantityLength(1.0, LengthUnit.FEET)));
+    }
 }

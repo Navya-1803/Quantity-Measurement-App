@@ -1,6 +1,5 @@
 package com.app.quantitymeasurement;
 
-import com.app.quantitymeasurement.QuantityLength.LengthUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,5 +102,9 @@ public class QuantityMeasurementApp {
         demonstrateLengthAddition(new QuantityLength(2.54, LengthUnit.CENTIMETERS), new QuantityLength(1.0, LengthUnit.INCHES), LengthUnit.CENTIMETERS);
         demonstrateLengthAddition(new QuantityLength(5.0, LengthUnit.FEET), new QuantityLength(0.0, LengthUnit.INCHES), LengthUnit.YARDS);
         demonstrateLengthAddition(new QuantityLength(5.0, LengthUnit.FEET), new QuantityLength(-2.0, LengthUnit.FEET), LengthUnit.INCHES);
+
+        demonstrateLengthConversion(new QuantityLength(2.54, LengthUnit.CENTIMETERS), LengthUnit.INCHES);
+        logger.info("Input: LengthUnit.FEET.convertToBaseUnit(12.0) -> Output: {}", LengthUnit.FEET.convertToBaseUnit(12.0));
+        logger.info("Input: LengthUnit.INCHES.convertToBaseUnit(12.0) -> Output: {}", LengthUnit.INCHES.convertToBaseUnit(12.0));
     }
 }

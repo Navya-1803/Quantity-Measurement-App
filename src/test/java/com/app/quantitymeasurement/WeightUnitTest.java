@@ -49,4 +49,9 @@ class WeightUnitTest {
             assertEquals(3.25, unit.convertFromBaseUnit(unit.convertToBaseUnit(3.25)), DELTA);
         }
     }
+
+    @Test
+    void testGetUnitName() {
+        assertEquals("KILOGRAM", WeightUnit.KILOGRAM.getUnitName());
+    }
 }

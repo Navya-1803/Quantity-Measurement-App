@@ -61,6 +61,39 @@ public class QuantityLength {
         return value * unit.getConversionFactor();
     }
 
+    // common validation for the static conversion method
+    private static void validateConversionInput(double value, LengthUnit source, LengthUnit target) {
+        if (source == null || target == null) {
+            throw new IllegalArgumentException("Source and target unit cannot be null");
+        }
+        if (!Double.isFinite(value)) {
+            throw new IllegalArgumentException("Value must be a finite number");
+        }
+    }
+
+    /**
+     * Converts a value from the source unit to the target unit.
+     * The value is first converted to feet (base unit) and then to the target unit.
+     *
+     * @param value  value to convert
+     * @param source unit of the given value
+     * @param target unit to convert to
+     * @return converted value
+     * @throws IllegalArgumentException if a unit is null or the value is NaN / infinite
+     */
+    public static double convert(double value, LengthUnit source, LengthUnit target) {
+        validateConversionInput(value, source, target);
+        double valueInFeet = value * source.getConversionFactor();
+        return valueInFeet / target.getConversionFactor();
+    }
+
+    /**
+     * Returns a new QuantityLength in the target unit, this object is not modified.
+     */
+    public QuantityLength convertTo(LengthUnit target) {
+        return new QuantityLength(convert(value, unit, target), target);
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

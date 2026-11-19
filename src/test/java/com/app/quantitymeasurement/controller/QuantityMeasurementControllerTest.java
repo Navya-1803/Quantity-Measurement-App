@@ -1,109 +1,174 @@
 package com.app.quantitymeasurement.controller;
 
-import com.app.quantitymeasurement.entity.QuantityDTO;
 import com.app.quantitymeasurement.exception.QuantityMeasurementException;
-import com.app.quantitymeasurement.repository.IQuantityMeasurementRepository;
+import com.app.quantitymeasurement.model.QuantityDTO;
+import com.app.quantitymeasurement.model.QuantityMeasurementDTO;
 import com.app.quantitymeasurement.service.IQuantityMeasurementService;
-import com.app.quantitymeasurement.service.QuantityMeasurementServiceImpl;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@WebMvcTest(QuantityMeasurementController.class)
 class QuantityMeasurementControllerTest {
 
+    private static final String BASE_URL = "/api/v1/quantities";
+
+    private static final String VALID_BODY = """
+            {"thisQuantityDTO": {"value": 1.0, "unit": "FEET", "measurementType": "LengthUnit"},
+             "thatQuantityDTO": {"value": 12.0, "unit": "INCHES", "measurementType": "LengthUnit"}}
+            """;
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockitoBean
     private IQuantityMeasurementService service;
-    private QuantityMeasurementController controller;
 
-    private final QuantityDTO oneFoot = new QuantityDTO(1.0, QuantityDTO.LengthUnit.FEET);
-    private final QuantityDTO twelveInches = new QuantityDTO(12.0, QuantityDTO.LengthUnit.INCHES);
-
-    @BeforeEach
-    void setUp() {
-        service = mock(IQuantityMeasurementService.class);
-        controller = new QuantityMeasurementController(service);
+    private QuantityMeasurementDTO result(String operation, String resultString, double resultValue) {
+        return QuantityMeasurementDTO.builder().thisValue(1.0).thisUnit("FEET").thisMeasurementType("LengthUnit")
+                .operation(operation).resultString(resultString).resultValue(resultValue).build();
     }
 
     @Test
-    void testController_DemonstrateEquality_Success() {
-        when(service.compare(oneFoot, twelveInches)).thenReturn(true);
-        assertTrue(controller.performComparison(oneFoot, twelveInches));
+    void testRestEndpointCompareQuantities() throws Exception {
+        when(service.compare(any(), any())).thenReturn(result("compare", "true", 0.0));
+        mockMvc.perform(post(BASE_URL + "/compare").contentType(MediaType.APPLICATION_JSON).content(VALID_BODY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.operation").value("compare"))
+                .andExpect(jsonPath("$.resultString").value("true"));
     }
 
     @Test
-    void testController_DemonstrateConversion_Success() {
-        QuantityDTO expected = new QuantityDTO(12.0, QuantityDTO.LengthUnit.INCHES);
-        when(service.convert(any(), any())).thenReturn(expected);
-        assertSame(expected, controller.performConversion(oneFoot, twelveInches));
+    void testRestEndpointConvertQuantities() throws Exception {
+        when(service.convert(any(), any())).thenReturn(result("convert", null, 12.0));
+        mockMvc.perform(post(BASE_URL + "/convert").contentType(MediaType.APPLICATION_JSON).content(VALID_BODY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultValue").value(12.0));
     }
 
     @Test
-    void testController_DemonstrateAddition_Success() {
-        QuantityDTO expected = new QuantityDTO(2.0, QuantityDTO.LengthUnit.FEET);
-        when(service.add(oneFoot, twelveInches)).thenReturn(expected);
-        assertSame(expected, controller.performAddition(oneFoot, twelveInches));
+    void testRestEndpointAddQuantities() throws Exception {
+        when(service.add(any(QuantityDTO.class), any(QuantityDTO.class))).thenReturn(result("add", null, 2.0));
+        mockMvc.perform(post(BASE_URL + "/add").contentType(MediaType.APPLICATION_JSON).content(VALID_BODY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultValue").value(2.0));
     }
 
     @Test
-    void testController_DemonstrateAddition_Error() {
-        when(service.add(any(), any())).thenThrow(new QuantityMeasurementException("add Error: failed"));
-        assertNull(controller.performAddition(oneFoot, twelveInches));
+    void testRestEndpointAddWithTargetUnit() throws Exception {
+        when(service.add(any(), any(), any())).thenReturn(result("add", null, 24.0));
+        String body = """
+                {"thisQuantityDTO": {"value": 1.0, "unit": "FEET", "measurementType": "LengthUnit"},
+                 "thatQuantityDTO": {"value": 12.0, "unit": "INCHES", "measurementType": "LengthUnit"},
+                 "targetQuantityDTO": {"value": 0.0, "unit": "INCHES", "measurementType": "LengthUnit"}}
+                """;
+        mockMvc.perform(post(BASE_URL + "/add").contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isOk());
+        verify(service).add(any(), any(), any());
     }
 
     @Test
-    void testController_Subtraction_Success() {
-        QuantityDTO expected = new QuantityDTO(0.0, QuantityDTO.LengthUnit.FEET);
-        when(service.subtract(oneFoot, twelveInches, oneFoot)).thenReturn(expected);
-        assertSame(expected, controller.performSubtraction(oneFoot, twelveInches, oneFoot));
+    void testRestEndpointSubtractAndDivide() throws Exception {
+        when(service.subtract(any(QuantityDTO.class), any(QuantityDTO.class))).thenReturn(result("subtract", null, 0.0));
+        when(service.divide(any(), any())).thenReturn(result("divide", null, 1.0));
+        mockMvc.perform(post(BASE_URL + "/subtract").contentType(MediaType.APPLICATION_JSON).content(VALID_BODY))
+                .andExpect(status().isOk());
+        mockMvc.perform(post(BASE_URL + "/divide").contentType(MediaType.APPLICATION_JSON).content(VALID_BODY))
+                .andExpect(jsonPath("$.resultValue").value(1.0));
     }
 
     @Test
-    void testController_Division_Error() {
-        when(service.divide(any(), any())).thenThrow(new QuantityMeasurementException("divide Error: Cannot divide by zero quantity"));
-        assertNull(controller.performDivision(oneFoot, twelveInches));
+    void testRestEndpointInvalidInput_Returns400() throws Exception {
+        String body = """
+                {"thisQuantityDTO": {"value": 1.0, "unit": "FOOT", "measurementType": "LengthUnit"},
+                 "thatQuantityDTO": {"value": 12.0, "unit": "INCHES", "measurementType": "LengthUnit"}}
+                """;
+        mockMvc.perform(post(BASE_URL + "/add").contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Unit must be valid for the specified measurement type"));
+        verifyNoInteractions(service);
     }
 
     @Test
-    void testController_DisplayResult_Success() {
-        assertEquals("Addition -> Input: a + b | Output: 2.0", controller.displayResult("Addition", "a + b", 2.0));
+    void testRestEndpointMissingParameter_Returns400() throws Exception {
+        String body = """
+                {"thisQuantityDTO": {"value": 1.0, "unit": "FEET", "measurementType": "LengthUnit"}}
+                """;
+        mockMvc.perform(post(BASE_URL + "/compare").contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    void testController_DisplayResult_Error() {
-        assertEquals("Addition -> Error: boom", controller.displayError("Addition", new QuantityMeasurementException("boom")));
+    void testExceptionHandling_ServiceError_Returns400() throws Exception {
+        when(service.add(any(QuantityDTO.class), any(QuantityDTO.class)))
+                .thenThrow(new QuantityMeasurementException("add Error: Cannot perform arithmetic between different measurement categories"));
+        mockMvc.perform(post(BASE_URL + "/add").contentType(MediaType.APPLICATION_JSON).content(VALID_BODY))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Quantity Measurement Error"))
+                .andExpect(jsonPath("$.path").value(BASE_URL + "/add"));
     }
 
     @Test
-    void testController_NullService_Prevention() {
-        assertThrows(IllegalArgumentException.class, () -> new QuantityMeasurementController(null));
+    void testHttpStatusCodes_ServerErrors() throws Exception {
+        when(service.divide(any(), any())).thenThrow(new ArithmeticException("Cannot divide by zero quantity"));
+        mockMvc.perform(post(BASE_URL + "/divide").contentType(MediaType.APPLICATION_JSON).content(VALID_BODY))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.message").value("Cannot divide by zero quantity"));
     }
 
     @Test
-    void testDataFlow_ControllerToService() {
-        controller.performDivision(oneFoot, twelveInches);
-        verify(service).divide(oneFoot, twelveInches);
+    void testRequestPathVariable_Extraction() throws Exception {
+        when(service.getOperationHistory("COMPARE")).thenReturn(List.of(result("compare", "true", 0.0)));
+        mockMvc.perform(get(BASE_URL + "/history/operation/COMPARE"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].operation").value("compare"));
+        verify(service).getOperationHistory("COMPARE");
     }
 
     @Test
-    void testController_AllOperations() {
-        // controller works end to end with the real service and a mocked repository
-        QuantityMeasurementController realController = new QuantityMeasurementController(
-                new QuantityMeasurementServiceImpl(mock(IQuantityMeasurementRepository.class)));
-        assertTrue(realController.performComparison(oneFoot, twelveInches));
-        assertEquals(12.0, realController.performConversion(oneFoot, twelveInches).getValue(), 1e-6);
-        assertEquals(2.0, realController.performAddition(oneFoot, twelveInches).getValue(), 1e-6);
-        assertEquals(0.0, realController.performSubtraction(oneFoot, twelveInches).getValue(), 1e-6);
-        assertEquals(1.0, realController.performDivision(oneFoot, twelveInches), 1e-6);
+    void testGetMeasurementsByType() throws Exception {
+        when(service.getMeasurementsByType("LengthUnit")).thenReturn(List.of(result("add", null, 2.0)));
+        mockMvc.perform(get(BASE_URL + "/history/type/LengthUnit"))
+                .andExpect(jsonPath("$.length()").value(1));
     }
 
     @Test
-    void testIntegration_EndToEnd_TemperatureUnsupported() {
-        QuantityMeasurementController realController = new QuantityMeasurementController(
-                new QuantityMeasurementServiceImpl(mock(IQuantityMeasurementRepository.class)));
-        QuantityDTO celsius = new QuantityDTO(100.0, QuantityDTO.TemperatureUnit.CELSIUS);
-        assertNull(realController.performAddition(celsius, celsius));
+    void testGetOperationCount() throws Exception {
+        when(service.getOperationCount("ADD")).thenReturn(4L);
+        mockMvc.perform(get(BASE_URL + "/count/ADD")).andExpect(content().string("4"));
+    }
+
+    @Test
+    void testGetErrorHistory() throws Exception {
+        when(service.getErrorHistory()).thenReturn(List.of());
+        mockMvc.perform(get(BASE_URL + "/history/errored")).andExpect(status().isOk()).andExpect(content().json("[]"));
+    }
+
+    @Test
+    void testContentNegotiation_XML() throws Exception {
+        when(service.compare(any(), any())).thenReturn(result("compare", "true", 0.0));
+        mockMvc.perform(post(BASE_URL + "/compare").contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_XML).content(VALID_BODY))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_XML))
+                .andExpect(xpath("/QuantityMeasurementDTO/operation").string("compare"));
+    }
+
+    @Test
+    void testMalformedJson_Returns400() throws Exception {
+        mockMvc.perform(post(BASE_URL + "/compare").contentType(MediaType.APPLICATION_JSON).content("{not json"))
+                .andExpect(status().isBadRequest());
     }
 }

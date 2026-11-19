@@ -1,126 +1,112 @@
 package com.app.quantitymeasurement.controller;
 
-import com.app.quantitymeasurement.entity.QuantityDTO;
-import com.app.quantitymeasurement.exception.QuantityMeasurementException;
+import com.app.quantitymeasurement.model.QuantityInputDTO;
+import com.app.quantitymeasurement.model.QuantityMeasurementDTO;
 import com.app.quantitymeasurement.service.IQuantityMeasurementService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 /**
- * QuantityMeasurementController is the facade used by the application to
- * run operations. It only passes requests to the service and shows the
- * results, it contains no business logic.
+ * REST controller exposing the quantity measurement operations. It only
+ * maps HTTP requests to service calls, all logic lives in the service.
+ * Responses are JSON by default and XML when the client asks for it.
  *
  * @author Navya Raj
  */
+@RestController
+@RequestMapping(value = "/api/v1/quantities", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+@Tag(name = "Quantity Measurements", description = "REST API for quantity measurement operations")
 public class QuantityMeasurementController {
 
     private static final Logger logger = LoggerFactory.getLogger(QuantityMeasurementController.class);
 
     private final IQuantityMeasurementService quantityMeasurementService;
 
-    // the service is injected through the constructor
     public QuantityMeasurementController(IQuantityMeasurementService quantityMeasurementService) {
-        if (quantityMeasurementService == null) {
-            throw new IllegalArgumentException("Service cannot be null");
-        }
         this.quantityMeasurementService = quantityMeasurementService;
-        logger.info("QuantityMeasurementController initialized");
     }
 
-    public Boolean performComparison(QuantityDTO thisQuantityDTO, QuantityDTO thatQuantityDTO) {
-        try {
-            boolean result = quantityMeasurementService.compare(thisQuantityDTO, thatQuantityDTO);
-            displayResult("Comparison", thisQuantityDTO + " == " + thatQuantityDTO, result);
-            return result;
-        } catch (QuantityMeasurementException e) {
-            displayError("Comparison", e);
-            return null;
-        }
+    @PostMapping("/compare")
+    @Operation(summary = "Compare two quantities")
+    public ResponseEntity<QuantityMeasurementDTO> performComparison(@Valid @RequestBody QuantityInputDTO quantityInputDTO) {
+        logger.info("POST /compare {}", quantityInputDTO);
+        return ResponseEntity.ok(quantityMeasurementService.compare(
+                quantityInputDTO.getThisQuantityDTO(), quantityInputDTO.getThatQuantityDTO()));
     }
 
-    public QuantityDTO performConversion(QuantityDTO thisQuantityDTO, QuantityDTO targetUnitDTO) {
-        try {
-            QuantityDTO result = quantityMeasurementService.convert(thisQuantityDTO, targetUnitDTO);
-            displayResult("Conversion", thisQuantityDTO + " to " + targetUnitDTO.getUnit(), result);
-            return result;
-        } catch (QuantityMeasurementException e) {
-            displayError("Conversion", e);
-            return null;
-        }
+    @PostMapping("/convert")
+    @Operation(summary = "Convert a quantity to the unit of the second quantity")
+    public ResponseEntity<QuantityMeasurementDTO> performConversion(@Valid @RequestBody QuantityInputDTO quantityInputDTO) {
+        logger.info("POST /convert {}", quantityInputDTO);
+        return ResponseEntity.ok(quantityMeasurementService.convert(
+                quantityInputDTO.getThisQuantityDTO(), quantityInputDTO.getThatQuantityDTO()));
     }
 
-    public QuantityDTO performAddition(QuantityDTO thisQuantityDTO, QuantityDTO thatQuantityDTO) {
-        try {
-            QuantityDTO result = quantityMeasurementService.add(thisQuantityDTO, thatQuantityDTO);
-            displayResult("Addition", thisQuantityDTO + " + " + thatQuantityDTO, result);
-            return result;
-        } catch (QuantityMeasurementException e) {
-            displayError("Addition", e);
-            return null;
-        }
+    @PostMapping("/add")
+    @Operation(summary = "Add two quantities")
+    public ResponseEntity<QuantityMeasurementDTO> performAddition(@Valid @RequestBody QuantityInputDTO quantityInputDTO) {
+        logger.info("POST /add {}", quantityInputDTO);
+        QuantityMeasurementDTO result = quantityInputDTO.getTargetQuantityDTO() == null
+                ? quantityMeasurementService.add(quantityInputDTO.getThisQuantityDTO(), quantityInputDTO.getThatQuantityDTO())
+                : quantityMeasurementService.add(quantityInputDTO.getThisQuantityDTO(), quantityInputDTO.getThatQuantityDTO(),
+                quantityInputDTO.getTargetQuantityDTO());
+        return ResponseEntity.ok(result);
     }
 
-    public QuantityDTO performAddition(QuantityDTO thisQuantityDTO, QuantityDTO thatQuantityDTO, QuantityDTO targetUnitDTO) {
-        try {
-            QuantityDTO result = quantityMeasurementService.add(thisQuantityDTO, thatQuantityDTO, targetUnitDTO);
-            displayResult("Addition", thisQuantityDTO + " + " + thatQuantityDTO + " in " + targetUnitDTO.getUnit(), result);
-            return result;
-        } catch (QuantityMeasurementException e) {
-            displayError("Addition", e);
-            return null;
-        }
+    @PostMapping("/subtract")
+    @Operation(summary = "Subtract the second quantity from the first")
+    public ResponseEntity<QuantityMeasurementDTO> performSubtraction(@Valid @RequestBody QuantityInputDTO quantityInputDTO) {
+        logger.info("POST /subtract {}", quantityInputDTO);
+        QuantityMeasurementDTO result = quantityInputDTO.getTargetQuantityDTO() == null
+                ? quantityMeasurementService.subtract(quantityInputDTO.getThisQuantityDTO(), quantityInputDTO.getThatQuantityDTO())
+                : quantityMeasurementService.subtract(quantityInputDTO.getThisQuantityDTO(), quantityInputDTO.getThatQuantityDTO(),
+                quantityInputDTO.getTargetQuantityDTO());
+        return ResponseEntity.ok(result);
     }
 
-    public QuantityDTO performSubtraction(QuantityDTO thisQuantityDTO, QuantityDTO thatQuantityDTO) {
-        try {
-            QuantityDTO result = quantityMeasurementService.subtract(thisQuantityDTO, thatQuantityDTO);
-            displayResult("Subtraction", thisQuantityDTO + " - " + thatQuantityDTO, result);
-            return result;
-        } catch (QuantityMeasurementException e) {
-            displayError("Subtraction", e);
-            return null;
-        }
+    @PostMapping("/divide")
+    @Operation(summary = "Divide the first quantity by the second")
+    public ResponseEntity<QuantityMeasurementDTO> performDivision(@Valid @RequestBody QuantityInputDTO quantityInputDTO) {
+        logger.info("POST /divide {}", quantityInputDTO);
+        return ResponseEntity.ok(quantityMeasurementService.divide(
+                quantityInputDTO.getThisQuantityDTO(), quantityInputDTO.getThatQuantityDTO()));
     }
 
-    public QuantityDTO performSubtraction(QuantityDTO thisQuantityDTO, QuantityDTO thatQuantityDTO, QuantityDTO targetUnitDTO) {
-        try {
-            QuantityDTO result = quantityMeasurementService.subtract(thisQuantityDTO, thatQuantityDTO, targetUnitDTO);
-            displayResult("Subtraction", thisQuantityDTO + " - " + thatQuantityDTO + " in " + targetUnitDTO.getUnit(), result);
-            return result;
-        } catch (QuantityMeasurementException e) {
-            displayError("Subtraction", e);
-            return null;
-        }
+    @GetMapping("/history/operation/{operation}")
+    @Operation(summary = "Get the history of an operation, e.g. COMPARE or ADD")
+    public ResponseEntity<List<QuantityMeasurementDTO>> getOperationHistory(@PathVariable String operation) {
+        return ResponseEntity.ok(quantityMeasurementService.getOperationHistory(operation));
     }
 
-    public Double performDivision(QuantityDTO thisQuantityDTO, QuantityDTO thatQuantityDTO) {
-        try {
-            double result = quantityMeasurementService.divide(thisQuantityDTO, thatQuantityDTO);
-            displayResult("Division", thisQuantityDTO + " / " + thatQuantityDTO, result);
-            return result;
-        } catch (QuantityMeasurementException e) {
-            displayError("Division", e);
-            return null;
-        }
+    @GetMapping("/history/type/{measurementType}")
+    @Operation(summary = "Get the history of a measurement type, e.g. LengthUnit")
+    public ResponseEntity<List<QuantityMeasurementDTO>> getMeasurementsByType(@PathVariable String measurementType) {
+        return ResponseEntity.ok(quantityMeasurementService.getMeasurementsByType(measurementType));
     }
 
-    /**
-     * Formats a successful result for the console.
-     */
-    public String displayResult(String operation, String input, Object result) {
-        String message = operation + " -> Input: " + input + " | Output: " + result;
-        logger.info(message);
-        return message;
+    @GetMapping("/count/{operation}")
+    @Operation(summary = "Count the successful operations of a type")
+    public ResponseEntity<Long> getOperationCount(@PathVariable String operation) {
+        return ResponseEntity.ok(quantityMeasurementService.getOperationCount(operation));
     }
 
-    /**
-     * Formats a failed operation for the console.
-     */
-    public String displayError(String operation, Exception exception) {
-        String message = operation + " -> Error: " + exception.getMessage();
-        logger.error(message);
-        return message;
+    @GetMapping("/history/errored")
+    @Operation(summary = "Get the history of failed operations")
+    public ResponseEntity<List<QuantityMeasurementDTO>> getErrorHistory() {
+        return ResponseEntity.ok(quantityMeasurementService.getErrorHistory());
     }
 }

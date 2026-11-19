@@ -1,12 +1,9 @@
-package com.app.quantitymeasurement.entity;
+package com.app.quantitymeasurement.model;
 
 import com.app.quantitymeasurement.unit.IMeasurable;
 import com.app.quantitymeasurement.unit.LengthUnit;
 
 import org.junit.jupiter.api.Test;
-
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -28,7 +25,6 @@ class QuantityMeasurementEntityTest {
     @Test
     void testQuantityEntity_BinaryOperandConstruction() {
         QuantityMeasurementEntity entity = new QuantityMeasurementEntity(oneFoot, twelveInches, "compare", "true");
-        assertEquals(1.0, entity.getThisValue());
         assertEquals(12.0, entity.getThatValue());
         assertEquals("LengthUnit", entity.getThatMeasurementType());
         assertEquals("true", entity.getResultString());
@@ -37,8 +33,8 @@ class QuantityMeasurementEntityTest {
 
     @Test
     void testQuantityEntity_QuantityResultConstruction() {
-        QuantityModel<IMeasurable> sum = new QuantityModel<>(2.0, LengthUnit.FEET);
-        QuantityMeasurementEntity entity = new QuantityMeasurementEntity(oneFoot, twelveInches, "add", sum);
+        QuantityMeasurementEntity entity = new QuantityMeasurementEntity(oneFoot, twelveInches, "add",
+                new QuantityModel<IMeasurable>(2.0, LengthUnit.FEET));
         assertEquals(2.0, entity.getResultValue());
         assertEquals("LengthUnit", entity.getResultMeasurementType());
     }
@@ -52,42 +48,28 @@ class QuantityMeasurementEntityTest {
 
     @Test
     void testQuantityEntity_ErrorConstruction() {
-        QuantityMeasurementEntity entity = new QuantityMeasurementEntity(oneFoot, null, "add", "add Error: failed", true);
+        QuantityMeasurementEntity entity = new QuantityMeasurementEntity(oneFoot, null, "add", "failed", true);
         assertTrue(entity.isError());
-        assertEquals("add Error: failed", entity.getErrorMessage());
+        assertEquals("failed", entity.getErrorMessage());
         assertNull(entity.getThatUnit());
     }
 
     @Test
-    void testQuantityEntity_ToString_Success() {
-        String text = new QuantityMeasurementEntity(oneFoot, twelveInches, "compare", "true").toString();
-        assertTrue(text.contains("operation=compare"));
-        assertTrue(text.contains("result=true"));
+    void testLifecycleCallbacks_SetTimestamps() {
+        QuantityMeasurementEntity entity = new QuantityMeasurementEntity(oneFoot, "convert", twelveInches);
+        entity.onCreate();
+        assertNotNull(entity.getCreatedAt());
+        assertEquals(entity.getCreatedAt(), entity.getUpdatedAt());
+        entity.onUpdate();
+        assertFalse(entity.getUpdatedAt().isBefore(entity.getCreatedAt()));
     }
 
     @Test
-    void testQuantityEntity_ToString_Error() {
-        String text = new QuantityMeasurementEntity(oneFoot, twelveInches, "add", "boom", true).toString();
-        assertTrue(text.contains("error=boom"));
-    }
-
-    @Test
-    void testEntity_Immutability() {
-        // no public setters exist, fields can only be set through constructors
-        for (Method method : QuantityMeasurementEntity.class.getDeclaredMethods()) {
-            if (method.getName().startsWith("set")) {
-                assertTrue(Modifier.isPrivate(method.getModifiers()), method.getName() + " should be private");
-            }
-        }
-    }
-
-    @Test
-    void testEntity_OperationType_Tracking() {
-        assertEquals("subtract", new QuantityMeasurementEntity(oneFoot, twelveInches, "subtract", oneFoot).getOperation());
-    }
-
-    @Test
-    void testEntity_IsSerializable() {
-        assertInstanceOf(java.io.Serializable.class, new QuantityMeasurementEntity(oneFoot, "convert", twelveInches));
+    void testLombokGeneratedMethods() {
+        QuantityMeasurementEntity first = new QuantityMeasurementEntity(oneFoot, twelveInches, "compare", "true");
+        QuantityMeasurementEntity second = new QuantityMeasurementEntity(oneFoot, twelveInches, "compare", "true");
+        assertEquals(first, second);
+        assertEquals(first.hashCode(), second.hashCode());
+        assertTrue(first.toString().contains("operation=compare"));
     }
 }

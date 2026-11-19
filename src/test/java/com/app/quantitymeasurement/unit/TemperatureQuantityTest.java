@@ -1,9 +1,5 @@
 package com.app.quantitymeasurement.unit;
 
-import com.app.quantitymeasurement.QuantityMeasurementApp;
-import com.app.quantitymeasurement.controller.QuantityMeasurementController;
-import com.app.quantitymeasurement.entity.QuantityDTO;
-
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -197,10 +193,9 @@ class TemperatureQuantityTest {
 
     @Test
     void testTemperatureIntegrationWithGenericQuantity() {
-        QuantityMeasurementController controller = QuantityMeasurementApp.getInstance().getController();
-        assertTrue(controller.performComparison(new QuantityDTO(0.0, QuantityDTO.TemperatureUnit.CELSIUS),
-                new QuantityDTO(32.0, QuantityDTO.TemperatureUnit.FAHRENHEIT)));
-        assertEquals(212.0, controller.performConversion(new QuantityDTO(100.0, QuantityDTO.TemperatureUnit.CELSIUS),
-                new QuantityDTO(0.0, QuantityDTO.TemperatureUnit.FAHRENHEIT)).getValue(), DELTA);
+        // temperature works through the same generic Quantity API as every other category
+        Quantity<TemperatureUnit> boiling = new Quantity<>(100.0, TemperatureUnit.CELSIUS);
+        assertEquals(new Quantity<>(212.0, TemperatureUnit.FAHRENHEIT), boiling.convertTo(TemperatureUnit.FAHRENHEIT));
+        assertEquals(boiling, new Quantity<>(373.15, TemperatureUnit.KELVIN));
     }
 }

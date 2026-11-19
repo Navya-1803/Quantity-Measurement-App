@@ -1,9 +1,5 @@
 package com.app.quantitymeasurement.unit;
 
-import com.app.quantitymeasurement.QuantityMeasurementApp;
-import com.app.quantitymeasurement.controller.QuantityMeasurementController;
-import com.app.quantitymeasurement.entity.QuantityDTO;
-
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -231,11 +227,9 @@ class VolumeQuantityTest {
 
     @Test
     void testScalability_VolumeIntegration() {
-        // the layered application handles volume without any change
-        QuantityMeasurementController controller = QuantityMeasurementApp.getInstance().getController();
-        assertTrue(controller.performComparison(new QuantityDTO(1.0, QuantityDTO.VolumeUnit.LITRE),
-                new QuantityDTO(1000.0, QuantityDTO.VolumeUnit.MILLILITRE)));
-        assertEquals(2.0, controller.performAddition(new QuantityDTO(1.0, QuantityDTO.VolumeUnit.LITRE),
-                new QuantityDTO(1000.0, QuantityDTO.VolumeUnit.MILLILITRE)).getValue(), DELTA);
+        // only the VolumeUnit enum was added, the generic Quantity handles the rest
+        Quantity<VolumeUnit> litre = new Quantity<>(1.0, VolumeUnit.LITRE);
+        assertEquals(litre, new Quantity<>(1000.0, VolumeUnit.MILLILITRE));
+        assertEquals(new Quantity<>(2.0, VolumeUnit.LITRE), litre.add(new Quantity<>(1000.0, VolumeUnit.MILLILITRE), VolumeUnit.LITRE));
     }
 }

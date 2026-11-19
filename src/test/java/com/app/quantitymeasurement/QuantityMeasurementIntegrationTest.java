@@ -1,71 +1,86 @@
 package com.app.quantitymeasurement;
 
-import com.app.quantitymeasurement.controller.QuantityMeasurementController;
-import com.app.quantitymeasurement.entity.QuantityDTO;
-import com.app.quantitymeasurement.repository.QuantityMeasurementCacheRepository;
-import com.app.quantitymeasurement.repository.QuantityMeasurementDatabaseRepository;
-import com.app.quantitymeasurement.service.QuantityMeasurementServiceImpl;
-import com.app.quantitymeasurement.util.ConnectionPool;
+import com.app.quantitymeasurement.repository.QuantityMeasurementRepository;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.io.File;
-import java.nio.file.Path;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@SpringBootTest
+@AutoConfigureMockMvc
 class QuantityMeasurementIntegrationTest {
 
-    private QuantityMeasurementDatabaseRepository repository;
-    private QuantityMeasurementController controller;
+    private static final String BASE_URL = "/api/v1/quantities";
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private QuantityMeasurementRepository repository;
 
     @BeforeEach
-    void setUp() {
-        ConnectionPool pool = new ConnectionPool("org.h2.Driver", "jdbc:h2:mem:integration_" + System.nanoTime() + ";DB_CLOSE_DELAY=-1", "sa", "", 2, 500);
-        repository = new QuantityMeasurementDatabaseRepository(pool, "db/schema.sql");
-        controller = new QuantityMeasurementController(new QuantityMeasurementServiceImpl(repository));
+    void cleanDatabase() {
+        repository.deleteAll();
     }
 
-    @AfterEach
-    void tearDown() {
-        repository.releaseResources();
-    }
-
-    @Test
-    void testServiceWithDatabaseRepository_Integration() {
-        controller.performComparison(new QuantityDTO(1.0, QuantityDTO.LengthUnit.FEET), new QuantityDTO(12.0, QuantityDTO.LengthUnit.INCHES));
-        controller.performAddition(new QuantityDTO(1.0, QuantityDTO.WeightUnit.KILOGRAM), new QuantityDTO(1000.0, QuantityDTO.WeightUnit.GRAM));
-        controller.performDivision(new QuantityDTO(1.0, QuantityDTO.LengthUnit.FEET), new QuantityDTO(0.0, QuantityDTO.LengthUnit.FEET));
-
-        assertEquals(3, repository.getTotalCount());
-        assertEquals(1, repository.getMeasurementsByOperation("add").size());
-        assertTrue(repository.getMeasurementsByOperation("divide").get(0).isError());
+    private static String body(double v1, String u1, String t1, double v2, String u2, String t2) {
+        return "{\"thisQuantityDTO\":{\"value\":" + v1 + ",\"unit\":\"" + u1 + "\",\"measurementType\":\"" + t1 + "\"},"
+                + "\"thatQuantityDTO\":{\"value\":" + v2 + ",\"unit\":\"" + u2 + "\",\"measurementType\":\"" + t2 + "\"}}";
     }
 
     @Test
-    void testServiceWithCacheRepository_Integration() throws Exception {
-        Path file = File.createTempFile("integration", ".ser").toPath();
-        file.toFile().delete();
-        var cacheRepository = new QuantityMeasurementCacheRepositoryAccess(file.toString()).create();
-        QuantityMeasurementController cacheController = new QuantityMeasurementController(new QuantityMeasurementServiceImpl(cacheRepository));
-        cacheController.performConversion(new QuantityDTO(1.0, QuantityDTO.VolumeUnit.LITRE), new QuantityDTO(0.0, QuantityDTO.VolumeUnit.MILLILITRE));
-        assertEquals(1, cacheRepository.getTotalCount());
-        file.toFile().delete();
+    void testIntegrationTest_MultipleOperations() throws Exception {
+        mockMvc.perform(post(BASE_URL + "/compare").contentType(MediaType.APPLICATION_JSON)
+                        .content(body(1.0, "FEET", "LengthUnit", 12.0, "INCHES", "LengthUnit")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.resultString").value("true"));
+        mockMvc.perform(post(BASE_URL + "/convert").contentType(MediaType.APPLICATION_JSON)
+                        .content(body(100.0, "CELSIUS", "TemperatureUnit", 0.0, "FAHRENHEIT", "TemperatureUnit")))
+                .andExpect(jsonPath("$.resultValue").value(212.0));
+        mockMvc.perform(post(BASE_URL + "/add").contentType(MediaType.APPLICATION_JSON)
+                        .content(body(1.0, "KILOGRAM", "WeightUnit", 1000.0, "GRAM", "WeightUnit")))
+                .andExpect(jsonPath("$.resultValue").value(2.0)).andExpect(jsonPath("$.resultUnit").value("KILOGRAM"));
+        mockMvc.perform(post(BASE_URL + "/subtract").contentType(MediaType.APPLICATION_JSON)
+                        .content(body(5.0, "LITRE", "VolumeUnit", 500.0, "MILLILITRE", "VolumeUnit")))
+                .andExpect(jsonPath("$.resultValue").value(4.5));
+        mockMvc.perform(post(BASE_URL + "/divide").contentType(MediaType.APPLICATION_JSON)
+                        .content(body(24.0, "INCHES", "LengthUnit", 2.0, "FEET", "LengthUnit")))
+                .andExpect(jsonPath("$.resultValue").value(1.0));
+
+        assertEquals(5, repository.count());
+        mockMvc.perform(get(BASE_URL + "/count/COMPARE")).andExpect(content().string("1"));
+        mockMvc.perform(get(BASE_URL + "/history/type/LengthUnit")).andExpect(jsonPath("$.length()").value(2));
     }
 
     @Test
-    void testParameterizedQuery_DateTimeHandling() {
-        controller.performComparison(new QuantityDTO(0.0, QuantityDTO.TemperatureUnit.CELSIUS), new QuantityDTO(32.0, QuantityDTO.TemperatureUnit.FAHRENHEIT));
-        // the record is stored and read back, created_at is filled by the database
-        assertEquals("true", repository.getMeasurementsByMeasurementType("TemperatureUnit").get(0).getResultString());
+    void testErrorsAreStoredAndReported() throws Exception {
+        mockMvc.perform(post(BASE_URL + "/add").contentType(MediaType.APPLICATION_JSON)
+                        .content(body(1.0, "FEET", "LengthUnit", 1.0, "KILOGRAM", "WeightUnit")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("add Error: Cannot perform arithmetic between different measurement categories: LengthUnit and WeightUnit"));
+        mockMvc.perform(post(BASE_URL + "/divide").contentType(MediaType.APPLICATION_JSON)
+                        .content(body(1.0, "FEET", "LengthUnit", 0.0, "INCHES", "LengthUnit")))
+                .andExpect(status().isInternalServerError());
+        mockMvc.perform(get(BASE_URL + "/history/errored")).andExpect(jsonPath("$.length()").value(2));
     }
 
-    // small helper because the file based constructor is package-private
-    private record QuantityMeasurementCacheRepositoryAccess(String file) {
-        QuantityMeasurementCacheRepository create() {
-            return com.app.quantitymeasurement.repository.CacheRepositoryTestFactory.create(file);
-        }
+    @Test
+    void testTemperatureArithmetic_Rejected() throws Exception {
+        mockMvc.perform(post(BASE_URL + "/add").contentType(MediaType.APPLICATION_JSON)
+                        .content(body(100.0, "CELSIUS", "TemperatureUnit", 50.0, "CELSIUS", "TemperatureUnit")))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testInvalidOperationInPath_Returns400() throws Exception {
+        mockMvc.perform(get(BASE_URL + "/history/operation/MULTIPLY")).andExpect(status().isBadRequest());
     }
 }

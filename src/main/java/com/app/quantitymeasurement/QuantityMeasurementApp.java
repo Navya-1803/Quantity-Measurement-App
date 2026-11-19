@@ -141,6 +141,23 @@ public class QuantityMeasurementApp {
         // centralized arithmetic (UC13), behaviour is the same as UC12
         demonstrateAddition(new Quantity<>(10.0, WeightUnit.KILOGRAM), new Quantity<>(5000.0, WeightUnit.GRAM), WeightUnit.GRAM);
 
+        // temperature operations (UC14)
+        demonstrateEquality(new Quantity<>(0.0, TemperatureUnit.CELSIUS), new Quantity<>(32.0, TemperatureUnit.FAHRENHEIT));
+        demonstrateEquality(new Quantity<>(273.15, TemperatureUnit.KELVIN), new Quantity<>(0.0, TemperatureUnit.CELSIUS));
+        demonstrateEquality(new Quantity<>(212.0, TemperatureUnit.FAHRENHEIT), new Quantity<>(100.0, TemperatureUnit.CELSIUS));
+        demonstrateEquality(new Quantity<>(100.0, TemperatureUnit.CELSIUS), new Quantity<>(373.15, TemperatureUnit.KELVIN));
+        demonstrateEquality(new Quantity<>(50.0, TemperatureUnit.CELSIUS), new Quantity<>(122.0, TemperatureUnit.FAHRENHEIT));
+        demonstrateConversion(new Quantity<>(100.0, TemperatureUnit.CELSIUS), TemperatureUnit.FAHRENHEIT);
+        demonstrateConversion(new Quantity<>(32.0, TemperatureUnit.FAHRENHEIT), TemperatureUnit.CELSIUS);
+        demonstrateConversion(new Quantity<>(273.15, TemperatureUnit.KELVIN), TemperatureUnit.CELSIUS);
+        demonstrateConversion(new Quantity<>(0.0, TemperatureUnit.CELSIUS), TemperatureUnit.KELVIN);
+        demonstrateConversion(new Quantity<>(-40.0, TemperatureUnit.CELSIUS), TemperatureUnit.FAHRENHEIT);
+        try {
+            demonstrateAddition(new Quantity<>(100.0, TemperatureUnit.CELSIUS), new Quantity<>(50.0, TemperatureUnit.CELSIUS));
+        } catch (UnsupportedOperationException e) {
+            logger.error("Input: Quantity(100.0, CELSIUS).add(Quantity(50.0, CELSIUS)) -> Error: {}", e.getMessage());
+        }
+
         // cross category comparison is always false
         Quantity<LengthUnit> oneFoot = new Quantity<>(1.0, LengthUnit.FEET);
         Quantity<WeightUnit> oneKilogram = new Quantity<>(1.0, WeightUnit.KILOGRAM);
